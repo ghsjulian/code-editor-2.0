@@ -1,0 +1,142 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");
+.openTerm {
+    display: block;
+}
+.terminal {
+    display: none;
+    position: absolute;
+    left: 48px;
+    top: 30%;
+    height: 70%;
+    width: 90%;
+    z-index: 90;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.5rem 0.7rem;
+    background: rgba(10, 10, 20, 0.95);
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        inset 0 0 80px rgba(0, 255, 100, 0.05);
+    border: 1px solid #1a1a2e;
+    font-family: "JetBrains Mono", monospace;
+    justify-content: center;
+    align-items: center;
+}
+
+.terminal-header {
+    background: linear-gradient(to right, #1a1a2e, #16213e);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #0f3460;
+}
+
+.terminal-dots {
+    display: flex;
+    gap: 8px;
+}
+
+.dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+}
+
+.dot.red {
+    background: #ff5f56;
+}
+.dot.yellow {
+    background: #ffbd2e;
+}
+.dot.green {
+    background: #27c93f;
+}
+
+.terminal-title {
+    color: #a0a0cc;
+    font-size: 14px;
+    margin-left: 15px;
+    opacity: 0.8;
+}
+
+.terminal-body {
+    padding: 20px;
+    height: calc(100% - 50px);
+    width: 100%;
+    color: #00ff9d;
+    font-size: 15.5px;
+    line-height: 1.6;
+    background: repeating-linear-gradient(
+        transparent 0px,
+        transparent 24px,
+        rgba(0, 255, 100, 0.03) 24px,
+        rgba(0, 255, 100, 0.03) 25px
+    );
+    overflow-x: scroll;
+}
+
+.output {
+    margin-bottom: 12px;
+}
+
+.prompt-line {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.prompt {
+    color: #00ccff;
+    white-space: nowrap;
+    margin-right: 10px;
+}
+
+.prompt-user {
+    color: #ff79c6;
+}
+
+.prompt-host {
+    color: #50fa7b;
+}
+
+.prompt-path {
+    color: #f1fa8c;
+}
+
+.prompt-symbol {
+    color: #ff5555;
+    font-weight: bold;
+}
+
+.terminal-body input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #00ff9d;
+    font-family: inherit;
+    font-size: inherit;
+    flex: 1;
+    caret-color: #00ff9d;
+}
+
+.cursor {
+    display: inline-block;
+    width: 8px;
+    height: 18px;
+    background: #00ff9d;
+    animation: blink 0.8s step-end infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.welcome {
+    color: #6272a4;
+    margin-bottom: 20px;
+    font-style: italic;
+}

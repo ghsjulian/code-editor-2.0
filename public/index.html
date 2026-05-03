@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <title>VS Code Mobile</title>
+        <!-- External Resources -->
+        <!-- Load the local Ace main file -->
+        <script src="ace/ace.js"></script>
+        <!-- Load the local Language Tools (REQUIRED for autocomplete) -->
+        <script src="ace/ext-language_tools.js"></script>
+        <link rel="stylesheet" href="css/index.css" />
+        <link rel="stylesheet" href="css/terminal.css" />
+    </head>
+    <body>
+        <!-- Activity Bar -->
+        <div class="activity-bar">
+            <div
+                class="activity-btn active"
+                onclick="toggleExplorer()"
+                title="Explorer"
+            >
+                <!-- <i class="fas fa-folder"></i>
+                -->
+                <img id="side-icon" src="/icons/project.png" alt="Projects" />
+            </div>
+            <div
+                class="activity-btn"
+                onclick="alert('Search coming soon')"
+                title="Search"
+            >
+                <!--<i class="fas fa-search"></i>--->
+                <img id="side-icon" src="/icons/search.png" alt="Search" />
+            </div>
+            <div
+                class="activity-btn"
+                onclick="alert('Source Control coming soon')"
+                title="Source Control"
+            >
+                <!---  <i class="fas fa-code-branch"></i>--->
+                <img id="side-icon" src="/icons/branch.png" alt="Branch" />
+            </div>
+
+            <div class="activity-btn" onclick="openTerminal()" title="Terminal">
+                <!--<i class="fa-solid fa-terminal"></i>-->
+                <img
+                    id="side-icon"
+                    src="/icons/terminal.png"
+                    width="35"
+                    height="35"
+                    alt="Terminal"
+                />
+            </div>
+            <div
+                class="activity-btn"
+                style="margin-top: auto"
+                onclick="toggleSettings()"
+                title="Settings"
+            >
+                <!-- <i class="fas fa-cog"></i>-->
+                <img id="side-icon" src="/icons/settings.png" alt="Settings" />
+            </div>
+        </div>
+
+        <!-- Primary Sidebar (Project Tree) -->
+        <div class="primary-sidebar" id="explorer-sidebar">
+            <div class="sidebar-header">
+                <span>EXPLORER</span>
+                <i
+                    class="fas fa-ellipsis-h"
+                    style="cursor: pointer"
+                    onclick="newFileOrFolder()"
+                ></i>
+            </div>
+            <div class="tree-container">
+                <div class="tree" id="fileTree"></div>
+                <div id="context-menu">
+                    <ul>
+                        <li id="new-folder">New Folder</li>
+                        <li id="new-file">New File</li>
+                        <li id="copy">Copy</li>
+                        <li id="move">Move</li>
+                        <li id="paste">Paste</li>
+                        <li id="rename">Rename</li>
+                        <li id="delete">Delete</li>
+                        <li id="info">Info</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Area -->
+        <div class="main-area">
+            <div class="tabs-bar" id="tabs-bar"></div>
+
+            <div id="editor-container">
+                <div id="editor"></div>
+            </div>
+        </div>
+
+        <!-- Right Settings Panel -->
+        <div class="settings-panel" id="settings-panel">
+            <div class="settings-header">
+                <span>Settings</span>
+                <i
+                    class="fas fa-times"
+                    onclick="toggleSettings()"
+                    style="cursor: pointer"
+                ></i>
+            </div>
+            <div class="settings-body">
+                <div class="setting-group">
+                    <label>Theme</label>
+                    <select
+                        id="theme-select"
+                        onchange="changeTheme(this.value)"
+                    ></select>
+                </div>
+
+                <div class="setting-group">
+                    <label>Font Size <span id="font-val">16</span>px</label>
+                    <input
+                        type="range"
+                        id="font-slider"
+                        min="12"
+                        max="24"
+                        value="16"
+                        oninput="updateFont(this.value)"
+                    />
+                </div>
+
+                <label class="checkbox-label">
+                    <input
+                        type="checkbox"
+                        id="word-wrap"
+                        checked
+                        onchange="toggleWrap(this.checked)"
+                    />
+                    Word Wrap
+                </label>
+                <label class="checkbox-label">
+                    <input
+                        type="checkbox"
+                        id="minimap"
+                        onchange="toggleMinimap(this.checked)"
+                    />
+                    Show Minimap
+                </label>
+
+                <hr />
+                <button onclick="toggleSettings()" class="btn-primary">
+                    Close
+                </button>
+            </div>
+        </div>
+        <!-- Terminal -->
+        <div class="terminal">
+            <!-- Header -->
+            <!--<div class="terminal-header">
+                <div class="terminal-dots">
+                    <div class="dot red"></div>
+                    <div class="dot yellow"></div>
+                    <div class="dot green"></div>
+                </div>
+                <div class="terminal-title">ghs@linux — Terminal</div>
+            </div>-->
+
+            <!-- Body -->
+            <div class="terminal-body" id="terminal">
+                <!--  <div class="welcome">
+                   Welcome to <span style="color: #50fa7b">GHS Terminal</span
+                   ><br />
+                   Type <span style="color: #ff79c6">help</span> for available
+                   commands.
+               </div>
+                -->
+                <!-- Initial prompt will be added by JS -->
+            </div>
+        </div>
+
+        <!-- New Item Modal -->
+        <div class="modal" id="new-modal">
+            <div class="modal-content">
+                <div class="modal-header">New File / Folder</div>
+                <div class="modal-body">
+                    <input
+                        type="text"
+                        id="new-name"
+                        placeholder="filename.js or folder/"
+                    />
+                    <div class="modal-actions">
+                        <button onclick="createNewItem(true)" class="btn-file">
+                            File
+                        </button>
+                        <button
+                            onclick="createNewItem(false)"
+                            class="btn-folder"
+                        >
+                            Folder
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="js/socket.io.min.js"></script>
+        <script type="module" src="js/tree.js"></script>
+        <script src="js/index.js"></script>
+        <script type="module" src="js/terminal.js"></script>
+    </body>
+</html>
