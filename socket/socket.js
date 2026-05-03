@@ -9,7 +9,7 @@ const createSocket = httpServer => {
     });
 
     io.on("connection", socket => {
-        console.log(`New connection: ${socket.id}`);
+        console.log(`\n[+] New connection : ${socket.id}\n`);
 
         // FIX: Use 'sh' if 'bash' fails, and handle spawn errors
         // In Termux, sometimes 'bash' needs a full path or just 'sh'
@@ -40,6 +40,7 @@ const createSocket = httpServer => {
                     return;
                 }
                 await fs.writeFileSync(path.join(filepath), "", "utf8");
+                console.log("\n[+] File created successfully\n");
             } catch (error) {
                 console.log("Error creating file - ", error.message);
             }
@@ -58,7 +59,7 @@ const createSocket = httpServer => {
                 }
                 // Create the folder
                 fs.mkdirSync(fullPath, { recursive: true });
-                console.log(`Folder created: ${fullPath}`);
+                console.log(`\n[+] Folder created successfully\n`);
             } catch (error) {
                 console.error("Error creating folder:", error.message);
             }
@@ -77,7 +78,7 @@ const createSocket = httpServer => {
                     return;
                 }
                 fs.unlinkSync(fullPath);
-                console.log(`File deleted: ${fullPath}`);
+                console.log(`\n[+] File deleted successfully\n`);
             } catch (error) {
                 console.error(`Error deleting file: ${error.message}`);
             }
@@ -96,7 +97,7 @@ const createSocket = httpServer => {
                     return;
                 }
                 fs.rmSync(fullPath, { recursive: true, force: true });
-                console.log(`Folder deleted: ${fullPath}`);
+                console.log(`\n[+] Folder deleted successfully\n`);
             } catch (error) {
                 console.error(`Error deleting folder: ${error.message}`);
             }
@@ -117,7 +118,7 @@ const createSocket = httpServer => {
                     return;
                 }
                 fs.copyFileSync(srcPath, destPath);
-                console.log(`File copied: ${srcPath} → ${destPath}`);
+                console.log(`\n[+] File copied successfully\n`);
             } catch (error) {
                 console.error(`Error copying file: ${error.message}`);
             }
@@ -126,25 +127,19 @@ const createSocket = httpServer => {
         socket.on("copy-folder", data => {
             try {
                 const { source, destination } = data;
-
-                const srcPath = path.resolve(source.path);
+                const srcPath = path.resolve(source);
                 const destPath = path.resolve(destination);
-
                 if (!fs.existsSync(srcPath)) {
                     console.log(`Source folder not found: ${srcPath}`);
                     return;
                 }
-
                 const stats = fs.statSync(srcPath);
-
                 if (!stats.isDirectory()) {
                     console.log(`Source is not a folder: ${srcPath}`);
                     return;
                 }
-
                 const folderName = path.basename(srcPath);
                 const finalDestPath = path.join(destPath, folderName);
-
                 // Prevent copying into itself
                 if (finalDestPath.startsWith(srcPath + path.sep)) {
                     console.log(
@@ -152,16 +147,12 @@ const createSocket = httpServer => {
                     );
                     return;
                 }
-
                 fs.cpSync(srcPath, finalDestPath, {
                     recursive: true,
                     force: true,
                     errorOnExist: false
                 });
-
-                console.log(
-                    `Folder copied successfully: ${srcPath} → ${finalDestPath}`
-                );
+                console.log(`\n[+] Folder copied successfully\n`);
             } catch (error) {
                 console.error(`Error copying folder: ${error.message}`);
             }
@@ -170,7 +161,7 @@ const createSocket = httpServer => {
         socket.on("move-folder", async data => {
             try {
                 const { source, destination } = data;
-                const srcPath = path.resolve(source.path);
+                const srcPath = path.resolve(source);
                 const destPath = path.resolve(destination);
                 if (!(await fs.existsSync(srcPath))) {
                     console.log(`Source folder not found: ${srcPath}`);
@@ -191,9 +182,7 @@ const createSocket = httpServer => {
                     return;
                 }
                 await fs.renameSync(srcPath, finalDestPath);
-                console.log(
-                    `Folder moved successfully: ${srcPath} → ${finalDestPath}`
-                );
+                console.log(`\n[+] Folder moved successfully\n`);
             } catch (error) {
                 console.error(`Error moving folder: ${error.message}`);
             }
@@ -202,7 +191,7 @@ const createSocket = httpServer => {
         socket.on("move-file", data => {
             try {
                 const { source, destination } = data;
-                const srcPath = path.resolve(source.path);
+                const srcPath = path.resolve(source);
                 const destPath = path.resolve(destination);
                 console.log(data);
 
@@ -216,7 +205,7 @@ const createSocket = httpServer => {
                     return;
                 }
                 fs.renameSync(srcPath, destPath);
-                console.log(`File moved: ${srcPath} → ${destPath}`);
+                console.log(`\n[+] File moved successfully\n`);
             } catch (error) {
                 console.error(`Error moving file: ${error.message}`);
             }
@@ -236,12 +225,12 @@ const createSocket = httpServer => {
 
         socket.on("disconnect", () => {
             shell.kill();
-            console.log("Socket disconnected, shell killed.");
+            console.log("\n[!] Socket disconnected & shell killed\n");
         });
 
         // If the shell exits on its own, let the user know
         shell.on("close", code => {
-            console.log(`Shell exited with code ${code}`);
+            console.log(`\n[!] Shell exited with code ${code}\n`);
         });
     });
 };

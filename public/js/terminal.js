@@ -1,3 +1,5 @@
+// import {socket} from "./client-socket.js"
+
 const terminalX = document.querySelector(".terminal");
 const terminal = document.getElementById("terminal");
 let commandHistory = [];

@@ -25,7 +25,13 @@
             >
                 <!-- <i class="fas fa-folder"></i>
                 -->
-                <img id="side-icon" src="/icons/project.png" alt="Projects" />
+                <img
+                    id="side-icon"
+                    width="20"
+                    height="20"
+                    src="/icons/project.png"
+                    alt="Projects"
+                />
             </div>
             <div
                 class="activity-btn"
@@ -33,7 +39,13 @@
                 title="Search"
             >
                 <!--<i class="fas fa-search"></i>--->
-                <img id="side-icon" src="/icons/search.png" alt="Search" />
+                <img
+                    id="side-icon"
+                    width="20"
+                    height="20"
+                    src="/icons/search.png"
+                    alt="Search"
+                />
             </div>
             <div
                 class="activity-btn"
@@ -41,7 +53,13 @@
                 title="Source Control"
             >
                 <!---  <i class="fas fa-code-branch"></i>--->
-                <img id="side-icon" src="/icons/branch.png" alt="Branch" />
+                <img
+                    id="side-icon"
+                    src="/icons/branch.png"
+                    width="20"
+                    height="20"
+                    alt="Branch"
+                />
             </div>
 
             <div class="activity-btn" onclick="openTerminal()" title="Terminal">
@@ -69,11 +87,7 @@
         <div class="primary-sidebar" id="explorer-sidebar">
             <div class="sidebar-header">
                 <span>EXPLORER</span>
-                <i
-                    class="fas fa-ellipsis-h"
-                    style="cursor: pointer"
-                    onclick="newFileOrFolder()"
-                ></i>
+                <i class="fas fa-ellipsis-h" style="cursor: pointer"></i>
             </div>
             <div class="tree-container">
                 <div class="tree" id="fileTree"></div>
@@ -208,6 +222,6 @@
         <script src="js/socket.io.min.js"></script>
         <script type="module" src="js/tree.js"></script>
         <script src="js/index.js"></script>
-        <script type="module" src="js/terminal.js"></script>
+        <script src="js/terminal.js"></script>
     </body>
 </html>
