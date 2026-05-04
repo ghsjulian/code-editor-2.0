@@ -11,6 +11,8 @@ import {
 } from "./client-socket.js";
 
 var cache = null;
+var paste = null;
+const pasteElem = document.querySelector("#paste");
 
 const renderFiles = async (treeContainer, path) => {
     try {
@@ -181,8 +183,8 @@ function showContextMenu(e, path, parent) {
     menu.style.display = "block";
     const clickX = e.touches ? e.touches[0].pageX : e.pageX;
     const clickY = e.touches ? e.touches[0].pageY : e.pageY;
-    menu.style.left = clickX + "px";
-    menu.style.top = clickY + "px";
+    menu.style.left = clickX - 90 + "px";
+    menu.style.top = clickY - 90 + "px";
 
     menu.onclick = async event => {
         const actionType = event.target.id;
@@ -206,6 +208,22 @@ function showContextMenu(e, path, parent) {
                 type: actionType.toUpperCase(),
                 element: parent
             };
+            paste = {
+                path: currentPath,
+                name: currentName,
+                isFolder,
+                type: actionType.toUpperCase(),
+                element: parent,
+                status: true
+            };
+            pasteElem.style.display = "flex";
+            pasteElem.innerHTML = `<img
+                                src="icons/files.png"
+                                id="menu-icon"
+                                alt="New Folder"
+                                title="New Folder"
+                            /><span>Paste (${paste.type})</span>
+                            `;
         } else if (actionType === "paste") {
             const destFolderPath = currentPath; // The folder we are pasting INTO
             if (!cache || !isFolder) return;
@@ -236,6 +254,9 @@ function showContextMenu(e, path, parent) {
                 300
             );
             cache = null;
+            paste = null;
+            pasteElem.style.display = "none";
+            pasteElem.textContent = `Paste`;
         }
         menu.style.display = "none";
     };

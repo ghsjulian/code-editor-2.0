@@ -55,8 +55,8 @@ body {
     padding: 0.5rem;
 }
 .activity-btn #side-icon {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     object-fit: cover;
 }
 .activity-btn:hover,
@@ -127,12 +127,28 @@ body {
     margin: 0.5rem 0;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 0.70em;
+    font-size: 0.7em;
+    display: flex;
+    justify-content: left;
+    gap: 5px;
+    align-items: center;
+    text-align: left;
+    z-index: 90;
+}
+#text-align ul li span {
+    z-index: 30;
+    font-weight: 600;
 }
 #context-menu ul li:hover {
     background: #11191d;
 }
-
+#context-menu ul li #menu-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    margin: 0 5px;
+    z-index: 50;
+}
 .tree-header {
     padding: 16px 20px;
     background: #2c3e50;
@@ -146,13 +162,13 @@ body {
 }
 
 .tree-node {
-    padding: 4px 0;
+    padding: 2px 0;
 }
 
 .node-header {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
+    padding: 5px 8px;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -207,7 +223,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5px 8px;
+    padding: 4px 8px;
     border-radius: 6px;
     transition: background 0.2s;
 }
@@ -220,7 +236,7 @@ body {
     color: #809aa6;
     font-weight: 600;
 }
-.file-item:hover {
+.file-item:hover,.node-header:hover {
     background: #000c0f;
 }
 /* Main Area & Editor */

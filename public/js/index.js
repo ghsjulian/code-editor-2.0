@@ -13,7 +13,7 @@ editor.setOptions({
     mode: "ace/mode/javascript",
     fontSize: "16px",
     showPrintMargin: false,
-    showGutter: false,
+    showGutter: true,
 
     // ADVANCED FEATURES
     enableBasicAutocompletion: true, // Ctrl+Space
