@@ -130,8 +130,8 @@ const getIcon = (filename = "") => {
         ".gitignore": "git",
         ".gitattributes": "git",
         ".env": "config",
-        readme: "markdown",
-        "readme.md": "markdown",
+        readme: "md",
+        "readme.md": "md",
         license: "text",
         makefile: "terminal"
     };

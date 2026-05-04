@@ -23,23 +23,9 @@ body {
     touch-action: manipulation;
     user-select: none;
 }
-
-/* Activity Bar */
-.activity-bar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 48px;
-    background: #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 0;
-    z-index: 300;
-    border-right: 1px solid var(--border);
+.tabs-bar #files-menu {
+    display: none;
 }
-
 .activity-btn {
     width: 35px;
     height: 35px;
@@ -50,6 +36,7 @@ body {
     font-size: 22px;
     cursor: pointer;
     transition: all 0.2s;
+    margin-top: 0;
     margin-bottom: 1rem;
     border-radius: 50%;
     padding: 0.5rem;
@@ -68,7 +55,7 @@ body {
 /* Sidebar */
 .primary-sidebar {
     position: fixed;
-    left: 48px;
+    left: 0;
     top: 0;
     bottom: 0;
     width: 280px;
@@ -80,11 +67,26 @@ body {
     z-index: 200;
     transform: translateX(-100%);
 }
-
+/* Activity Bar */
+.primary-sidebar .activity-bars {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 48px;
+    background: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 0;
+    border-right: 1px solid var(--border);
+}
 .primary-sidebar.open {
     transform: translateX(0);
 }
-
+.activity-bars #side-file-menu {
+    display: none;
+}
 .sidebar-header {
     padding: 8px 8px;
     background: #2d2d2d;
@@ -94,9 +96,14 @@ body {
     justify-content: space-between;
     align-items: center;
 }
+.sidebar-header span {
+    text-align: center;
+    margin-left: 3rem;
+}
 
 .tree-container {
     position: relative;
+    left: 48px;
     max-width: 650px;
     margin: 0 0;
     padding: 0.5rem 0;
@@ -117,7 +124,7 @@ body {
     border-radius: 8px;
     border: 0.1px solid #4c4c4c;
     background: #21292c;
-    z-index: 100;
+    z-index: 300;
 }
 #context-menu ul li {
     list-style: none;
@@ -236,13 +243,14 @@ body {
     color: #809aa6;
     font-weight: 600;
 }
-.file-item:hover,.node-header:hover {
+.file-item:hover,
+.node-header:hover {
     background: #000c0f;
 }
 /* Main Area & Editor */
 .main-area {
     position: absolute;
-    left: 48px;
+    left: 280px;
     top: 0;
     right: 0;
     bottom: 0;
@@ -251,11 +259,30 @@ body {
 }
 
 .tabs-bar {
+    position: relative;
     background: #2d2d2d;
     height: 35px;
     display: flex;
     overflow-x: auto;
     border-bottom: 1px solid var(--border);
+}
+.tabs-bar #files-menu {
+    outline: none;
+    border: none;
+    background: transparent;
+    display: none;
+    width: 23px;
+    height: 23px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 1.8rem;
+    padding: 0.5rem;
+}
+.tabs-bar #files-menu img {
+    width: 23px;
+    height: 23px;
+    object-fit: contain;
 }
 
 .tab {
@@ -287,7 +314,10 @@ body {
     position: absolute;
     inset: 0;
 }
-
+#editor .ace_gutter-layer {
+    width: 15px;
+    contain: none;
+}
 .status-bar {
     height: 24px;
     background: var(--primary);
@@ -403,4 +433,25 @@ body {
     color: white;
     border: none;
     border-radius: 4px;
+}
+
+/*---> Responsive For Mobile <---*/
+@media (max-width: 768px) {
+    .primary-sidebar {
+        width: 320px;
+    }
+    .tabs-bar #files-menu {
+        display: block;
+    }
+    .activity-bars #side-file-menu {
+        display: flex;
+        margin: .3rem 0;
+        padding: 0.2rem 0;
+    }
+    .tree-container {
+        width: 80%;
+    }
+    .main-area {
+        left: 0;
+    }
 }

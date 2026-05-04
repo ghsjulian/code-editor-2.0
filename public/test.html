@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>VS Code Mobile</title>
+
+<!-- ACE CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ext-language_tools.min.js"></script>
+
+<style>
+
+/* ===== BASE ===== */
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
+body{display:flex;height:100vh;overflow:hidden;background:#1e1e1e;color:#fff}
+
+/* ===== ACTIVITY BAR ===== */
+.activity-bar{
+    width:60px;
+    background:#111;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:10px 0;
+    transition:.3s;
+    z-index:1002;
+}
+.activity-btn{padding:10px;border-radius:8px;cursor:pointer}
+.activity-btn:hover{background:#333}
+
+/* ===== SIDEBAR ===== */
+.primary-sidebar{
+    width:260px;
+    background:#1b1b1b;
+    border-right:1px solid #333;
+    display:flex;
+    flex-direction:column;
+    transition:.3s;
+}
+.sidebar-header{padding:10px;font-weight:bold;border-bottom:1px solid #333}
+.tree-container{flex:1;overflow:auto}
+
+/* ===== MAIN ===== */
+.main-area{flex:1;display:flex;flex-direction:column}
+.tabs-bar{height:40px;background:#2a2a2a;display:flex;align-items:center}
+#editor-container{flex:1;position:relative}
+#editor{position:absolute;width:100%;height:100%}
+
+/* ===== SETTINGS ===== */
+.settings-panel{
+    position:fixed;
+    right:-320px;
+    top:0;
+    width:300px;
+    height:100%;
+    background:#1f1f1f;
+    border-left:1px solid #333;
+    transition:.3s;
+}
+.settings-panel.active{right:0}
+.settings-header{padding:12px;border-bottom:1px solid #333;display:flex;justify-content:space-between}
+.settings-body{padding:15px}
+.btn-primary{width:100%;padding:10px;background:#007acc;border:none;color:#fff}
+
+/* ===== TERMINAL ===== */
+.terminal{
+    position:fixed;
+    bottom:0;
+    left:60px;
+    right:0;
+    height:200px;
+    background:#000;
+    border-top:1px solid #333;
+    display:none;
+}
+.terminal-body{padding:10px;height:100%;overflow:auto}
+
+/* ===== MODAL ===== */
+.modal{
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    justify-content:center;
+    align-items:center;
+}
+.modal-content{
+    background:#222;
+    padding:20px;
+    border-radius:10px;
+    width:90%;
+    max-width:400px;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width:768px){
+
+/* TOP NAVBAR */
+.activity-bar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:50px;
+    flex-direction:row;
+    padding:0 10px;
+    gap:10px;
+}
+
+/* SIDEBAR */
+.primary-sidebar{
+    position:fixed;
+    top:50px;
+    left:-260px;
+    height:calc(100% - 50px);
+    z-index:1001;
+}
+.primary-sidebar.mobile-active{
+    left:0;
+}
+
+/* MAIN FULL */
+.main-area{
+    margin-top:50px;
+    width:100%;
+}
+
+/* TERMINAL */
+.terminal{
+    left:0;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- Activity Bar -->
+<div class="activity-bar">
+    <div class="activity-btn active" onclick="toggleExplorer()">
+        <img id="side-icons" width="25" height="25" src="/icons/project.png">
+    </div>
+    <div class="activity-btn" onclick="alert('Search coming soon')">
+        <img id="side-icons" width="25" height="25" src="/icons/search.png">
+    </div>
+    <div class="activity-btn" onclick="alert('Source Control coming soon')">
+        <img id="side-icons" width="25" height="25" src="/icons/branch.png">
+    </div>
+    <div class="activity-btn" onclick="openTerminal()">
+        <img id="side-icon" width="40" height="40" src="/icons/terminal.png">
+    </div>
+    <div class="activity-btn" style="margin-top:auto" onclick="toggleSettings()">
+        <img id="side-icons" width="25" height="25" src="/icons/settings.png">
+    </div>
+</div>
+
+<!-- Sidebar -->
+<div class="primary-sidebar" id="explorer-sidebar">
+    <div class="sidebar-header">
+        <span>EXPLORER</span>
+    </div>
+    <div class="tree-container">
+        <div class="tree" id="fileTree"></div>
+        <div id="context-menu"><ul></ul></div>
+    </div>
+</div>
+
+<!-- Main -->
+<div class="main-area">
+    <div class="tabs-bar" id="tabs-bar"></div>
+    <div id="editor-container">
+        <div id="editor"></div>
+    </div>
+</div>
+
+<!-- Settings -->
+<div class="settings-panel" id="settings-panel">
+    <div class="settings-header">
+        <span>Settings</span>
+        <span onclick="toggleSettings()">✖</span>
+    </div>
+    <div class="settings-body">
+        <label>Theme</label>
+        <select id="theme-select"></select>
+
+        <label>Font Size <span id="font-val">16</span></label>
+        <input type="range" min="12" max="24" value="16" id="font-slider">
+
+        <button onclick="toggleSettings()" class="btn-primary">Close</button>
+    </div>
+</div>
+
+<!-- Terminal -->
+<div class="terminal" id="terminal-box">
+    <div class="terminal-body" id="terminal"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="new-modal">
+    <div class="modal-content">
+        <input type="text" id="new-name" placeholder="filename.js">
+    </div>
+</div>
+
+<script>
+
+/* ===== ACE ===== */
+const editor = ace.edit("editor");
+editor.setTheme("ace/theme/monokai");
+editor.session.setMode("ace/mode/javascript");
+editor.setOptions({
+    enableBasicAutocompletion:true,
+    enableLiveAutocompletion:true,
+    fontSize:"16px"
+});
+
+/* ===== THEMES ===== */
+["monokai","github","dracula","tomorrow"].forEach(t=>{
+    let o=document.createElement("option");
+    o.value=t;o.textContent=t;
+    document.getElementById("theme-select").appendChild(o);
+});
+
+document.getElementById("theme-select").onchange=e=>{
+    editor.setTheme("ace/theme/"+e.target.value);
+};
+
+/* ===== FONT ===== */
+document.getElementById("font-slider").oninput=e=>{
+    editor.setFontSize(e.target.value+"px");
+    document.getElementById("font-val").textContent=e.target.value;
+};
+
+/* ===== EXPLORER TOGGLE ===== */
+function toggleExplorer(){
+    const sidebar=document.getElementById("explorer-sidebar");
+    const isMobile=window.innerWidth<=768;
+
+    if(isMobile){
+        sidebar.classList.toggle("mobile-active");
+    }else{
+        sidebar.classList.toggle("active");
+    }
+}
+
+/* ===== SETTINGS ===== */
+function toggleSettings(){
+    document.getElementById("settings-panel").classList.toggle("active");
+}
+
+/* ===== TERMINAL ===== */
+function openTerminal(){
+    const t=document.getElementById("terminal-box");
+    t.style.display = t.style.display==="block"?"none":"block";
+}
+
+/* ===== CLOSE SIDEBAR (MOBILE CLICK OUTSIDE) ===== */
+document.addEventListener("click",function(e){
+    const sidebar=document.getElementById("explorer-sidebar");
+
+    if(window.innerWidth<=768){
+        if(!sidebar.contains(e.target) && !e.target.closest(".activity-btn")){
+            sidebar.classList.remove("mobile-active");
+        }
+    }
+});
+
+/* ===== DEFAULT CONTENT ===== */
+editor.setValue("console.log('VS Code Mobile Ready 🚀');",-1);
+
+</script>
+
+</body>
+</html>

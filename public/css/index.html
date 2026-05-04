@@ -17,86 +17,91 @@
     </head>
     <body>
         <!-- Activity Bar -->
+        <div class="activity-bar open">
+            <button id="files-menu">
+                <img
+                    id="side-icons"
+                    width="25"
+                    height="25"
+                    src="/icons/project.png"
+                    alt="Projects"
+                />
+            </button>
+            <!--
+            <div
+                class="activity-btn active"
+                onclick="toggleExplorer()"
+                title="Explorer"
+            >
+                <img
+                    id="side-icons"
+                    width="25"
+                    height="25"
+                    src="/icons/project.png"
+                    alt="Projects"
+                />
+            </div>
+            -->
+            <div
+                class="activity-btn"
+                onclick="alert('Search coming soon')"
+                title="Search"
+            >
+                <!--<i class="fas fa-search"></i>--->
+                <img
+                    id="side-icons"
+                    width="25"
+                    height="25"
+                    src="/icons/search.png"
+                    alt="Search"
+                />
+            </div>
+            <div
+                class="activity-btn"
+                onclick="alert('Source Control coming soon')"
+                title="Source Control"
+            >
+                <!---  <i class="fas fa-code-branch"></i>--->
+                <img
+                    id="side-icons"
+                    src="/icons/branch.png"
+                    width="25"
+                    height="25"
+                    alt="Branch"
+                />
+            </div>
+
+            <div class="activity-btn" onclick="openTerminal()" title="Terminal">
+                <!--<i class="fa-solid fa-terminal"></i>-->
+                <img
+                    id="side-icon"
+                    src="/icons/terminal.png"
+                    width="40"
+                    height="40"
+                    alt="Terminal"
+                />
+            </div>
+            <div
+                class="activity-btn"
+                style="margin-top: auto"
+                onclick="toggleSettings()"
+                title="Settings"
+            >
+                <!-- <i class="fas fa-cog"></i>-->
+                <img
+                    id="side-icons"
+                    width="25"
+                    height="25"
+                    src="/icons/settings.png"
+                    alt="Settings"
+                />
+            </div>
+        </div>
 
         <!-- Primary Sidebar (Project Tree) -->
         <div class="primary-sidebar" id="explorer-sidebar">
-            <div class="activity-bars">
-                <div
-                    id="side-file-menu"
-                    class="activity-btn active"
-                    onclick="toggleExplorer()"
-                    title="Explorer"
-                    style="margin-left : 0"
-                >
-                    <img
-                        id="side-icons"
-                        width="25"
-                        height="25"
-                        src="/icons/project.png"
-                        alt="Projects"
-                    />
-                </div>
-                <div
-                    class="activity-btn"
-                    onclick="alert('Search coming soon')"
-                    title="Search"
-                >
-                    <!--<i class="fas fa-search"></i>--->
-                    <img
-                        id="side-icons"
-                        width="25"
-                        height="25"
-                        src="/icons/search.png"
-                        alt="Search"
-                    />
-                </div>
-                <div
-                    class="activity-btn"
-                    onclick="alert('Source Control coming soon')"
-                    title="Source Control"
-                >
-                    <!---  <i class="fas fa-code-branch"></i>--->
-                    <img
-                        id="side-icons"
-                        src="/icons/branch.png"
-                        width="25"
-                        height="25"
-                        alt="Branch"
-                    />
-                </div>
-
-                <div
-                    class="activity-btn"
-                    onclick="openTerminal()"
-                    title="Terminal"
-                >
-                    <!--<i class="fa-solid fa-terminal"></i>-->
-                    <img
-                        id="side-icon"
-                        src="/icons/terminal.png"
-                        width="40"
-                        height="40"
-                        alt="Terminal"
-                    />
-                </div>
-                <div
-                    class="activity-btn"
-                    style="margin-top: auto"
-                    onclick="toggleSettings()"
-                    title="Settings"
-                >
-                    <!-- <i class="fas fa-cog"></i>-->
-                    <img
-                        id="side-icons"
-                        width="25"
-                        height="25"
-                        src="/icons/settings.png"
-                        alt="Settings"
-                    />
-                </div>
-            </div>
             <div class="sidebar-header">
-                <span>FILE EXPLORER</span>
+                <span>EXPLORER</span>
                 <i class="fas fa-ellipsis-h" style="cursor: pointer"></i>
             </div>
             <div class="tree-container">
@@ -182,17 +187,7 @@
 
         <!-- Main Area -->
         <div class="main-area">
-            <div class="tabs-bar" id="tabs-bar">
-                <button onclick="toggleExplorer()" id="files-menu">
-                    <img
-                        id="side-icons"
-                        width="25"
-                        height="25"
-                        src="/icons/project.png"
-                        alt="Projects"
-                    />
-                </button>
-            </div>
+            <div class="tabs-bar" id="tabs-bar"></div>
 
             <div id="editor-container">
                 <div id="editor"></div>
