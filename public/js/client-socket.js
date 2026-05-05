@@ -4,6 +4,7 @@ socket.on("connect", () => {
     console.log("\n[+] CODE SERVER CONNECTED \n");
 });
 
+
 export const createFile = path => {
     if (!path) return;
     socket.emit("create-file", path);
@@ -36,5 +37,10 @@ export const moveFile = async data => {
 export const moveFolder = async data => {
     if (!data) return;
     socket.emit("move-folder", data);
+    return true;
+};
+export const openFile = async path => {
+    if (!path) return;
+    socket.emit("open-file", path);
     return true;
 };

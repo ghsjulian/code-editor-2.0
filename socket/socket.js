@@ -25,7 +25,7 @@ const createSocket = httpServer => {
         });
 
         shell.stdout.on("data", data => {
-            socket.emit("terminal:output", data.toString());
+            socket.emit("terminal:output", data.toString() || "");
         });
 
         shell.stderr.on("data", data => {
@@ -209,6 +209,21 @@ const createSocket = httpServer => {
             } catch (error) {
                 console.error(`Error moving file: ${error.message}`);
             }
+        });
+        // Open File In Editor ----
+        socket.on("open-file", async(fpath) => {
+            const filePath = path.resolve(fpath);
+            if (!fs.existsSync(filePath)) {
+                console.log(`Source file not found: ${filePath}`);
+                return;
+            }
+            const stats = fs.statSync(filePath);
+            if (!stats.isFile()) {
+                console.log(`Not a file: ${filePath}`);
+                return;
+            }
+            const fileData = await fs.readFileSync(filePath, "utf8");
+            socket.emit("file-data",fileData)
         });
         socket.on("terminal:input", input => {
             // Check if process is still alive and stream is open

@@ -26,7 +26,7 @@
                     class="activity-btn active"
                     onclick="toggleExplorer()"
                     title="Explorer"
-                    style="margin-left : 0"
+                    style="margin-left: 0"
                 >
                     <img
                         id="side-icons"
@@ -192,6 +192,7 @@
                         alt="Projects"
                     />
                 </button>
+                <div class="container"></div>
             </div>
 
             <div id="editor-container">
@@ -256,27 +257,7 @@
         </div>
         <!-- Terminal -->
         <div class="terminal">
-            <!-- Header -->
-            <!--<div class="terminal-header">
-                <div class="terminal-dots">
-                    <div class="dot red"></div>
-                    <div class="dot yellow"></div>
-                    <div class="dot green"></div>
-                </div>
-                <div class="terminal-title">ghs@linux — Terminal</div>
-            </div>-->
-
-            <!-- Body -->
-            <div class="terminal-body" id="terminal">
-                <!--  <div class="welcome">
-                   Welcome to <span style="color: #50fa7b">GHS Terminal</span
-                   ><br />
-                   Type <span style="color: #ff79c6">help</span> for available
-                   commands.
-               </div>
-                -->
-                <!-- Initial prompt will be added by JS -->
-            </div>
+            <div class="terminal-body" id="terminal"></div>
         </div>
 
         <!-- New Item Modal -->
@@ -306,6 +287,5 @@
         <script src="js/socket.io.min.js"></script>
         <script type="module" src="js/tree.js"></script>
         <script src="js/index.js"></script>
-        <script src="js/terminal.js"></script>
     </body>
 </html>

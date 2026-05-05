@@ -45,6 +45,13 @@ function toggleExplorer() {
     document.getElementById("explorer-sidebar").classList.toggle("open");
 }
 
+const openTerminal = () => {
+    const terminalX = document.querySelector(".terminal");
+    terminalX.classList.toggle("openTerm");
+    terminalX.style.display = terminalX.classList.contains("openTerm")
+        ? "block"
+        : "none";
+};
 
 
 

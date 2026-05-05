@@ -7,12 +7,17 @@ import {
     copyFile,
     copyFolder,
     moveFile,
-    moveFolder
+    moveFolder,
+    openFile
 } from "./client-socket.js";
+import { getAceMode } from "./get-ace-mode.js";
 
 var cache = null;
 var paste = null;
+const activeFiles = [];
 const pasteElem = document.querySelector("#paste");
+const tabContainer = document.querySelector(".container");
+const myEditor = ace.edit("editor");
 
 const renderFiles = async (treeContainer, path) => {
     try {
@@ -103,6 +108,7 @@ function createTreeNode(node, parentElement) {
             <span id="${node.path}" class="node-name">${node.name}</span>  
         `;
         setupContextMenuEvents(fileDiv, node.path);
+        setFileAction(fileDiv, node);
         nodeDiv.appendChild(fileDiv);
     }
     parentElement.appendChild(nodeDiv);
@@ -120,6 +126,25 @@ function setupContextMenuEvents(element, path) {
         showContextMenu(e, path, element);
     });
 }
+
+const setFileAction = (element, node) => {
+    const file = element.querySelector(".node-name");
+    file.addEventListener("click", async () => {
+        if (activeFiles.includes(node.name)) {
+            document
+                .getElementById("explorer-sidebar")
+                .classList.toggle("open");
+            return;
+        }
+
+        const mode = getAceMode(node.name);
+        await openFile(node.path);
+        myEditor.session.setMode(mode);
+        activeFiles.push(node.name);
+        setTab(node.name);
+        document.getElementById("explorer-sidebar").classList.toggle("open");
+    });
+};
 
 const openFileInput = (target, path) => {
     const nodeDiv = document.createElement("div");
@@ -267,4 +292,153 @@ document.addEventListener("click", e => {
     if (menu && !menu.contains(e.target)) menu.style.display = "none";
 });
 
-window.onload = () => getFiles(document.getElementById("fileTree"));
+const setTab = filename => {
+    const list = document.createElement("div");
+    const p = document.createElement("p");
+    const span = document.createElement("span");
+
+    list.className = "list";
+    p.textContent = filename;
+    span.textContent = "x";
+    const icon = getIcon(filename);
+    list.innerHTML = icon;
+
+    list.appendChild(p);
+    list.appendChild(span);
+    tabContainer.appendChild(list);
+    setActiveTab(p);
+
+    span.onclick = e => {
+        const index = activeFiles.findIndex(
+            file => file === filename || file.name === filename
+        );
+        if (index !== -1) {
+            activeFiles.splice(index, 1);
+            list.remove();
+            myEditor.setValue("", -1);
+            if (activeFiles.length === 0) {
+                const defaultFile = "untitled.txt";
+                activeFiles.push(defaultFile);
+                tabContainer.innerHTML = "";
+                setTab(defaultFile);
+                const mode = getAceMode(defaultFile);
+                myEditor.session.setMode(mode);
+            } else {
+                tabContainer.innerHTML = "";
+                activeFiles.forEach(async f => {
+                    setTab(f.name || f);
+                    await openFile(f.name || f);
+                    const mode = getAceMode(f.name || f);
+                    myEditor.session.setMode(mode);
+                });
+            }
+        }
+    };
+    p.onclick = async e => {
+        setActiveTab(e.target);
+        const name = e.target.textContent;
+        const mode = getAceMode(name);
+        myEditor.session.setMode(mode);
+        if (name === "untitled.txt") {
+            myEditor.setValue("", -1);
+            return;
+        }
+        await openFile(name);
+    };
+};
+
+const setActiveTab = element => {
+    const parent = element.parentElement;
+    if (parent) {
+        document.querySelectorAll(".list.active").forEach(el => {
+            el.classList.remove("active");
+        });
+        parent.classList.add("active");
+    }
+};
+
+/*----------- CREATING FOR TERMINAL -----------*/
+const terminal = document.getElementById("terminal");
+let commandHistory = [];
+let historyIndex = -1;
+
+function createPrompt() {
+    const promptLine = document.createElement("div");
+    promptLine.className = "prompt-line";
+    promptLine.innerHTML = `
+        <span class="prompt">
+          <span class="prompt-host">localhost</span>:<span class="prompt-user">ghs</span>--<span class="prompt-symbol">#</span>
+        </span>
+        <input type="text" autofocus spellcheck="false" autocomplete="off">
+    `;
+    const input = promptLine.querySelector("input");
+    input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            const command = input.value.trim();
+            input.disabled = true; // Lock input immediately to prevent spamming
+            if (command) {
+                commandHistory.unshift(command);
+                historyIndex = -1;
+                processCommand(command);
+            } else {
+                createPrompt();
+            }
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (commandHistory.length > 0) {
+                historyIndex = Math.min(
+                    historyIndex + 1,
+                    commandHistory.length - 1
+                );
+                input.value = commandHistory[historyIndex];
+            }
+        } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (historyIndex > 0) {
+                historyIndex--;
+                input.value = commandHistory[historyIndex];
+            } else {
+                historyIndex = -1;
+                input.value = "";
+            }
+        }
+    });
+    terminal.appendChild(promptLine);
+    input.focus();
+    terminal.scrollTop = terminal.scrollHeight;
+}
+
+function processCommand(cmd) {
+    const lowerCmd = cmd.toLowerCase().trim();
+    if (lowerCmd === "clear" || lowerCmd === "cls") {
+        terminal.innerHTML = `<div class="welcome">Terminal cleared.<br></div>`;
+        createPrompt();
+        return;
+    }
+    const output = document.createElement("div");
+    terminal.scrollTop = terminal.scrollHeight;
+    socket.emit("terminal:input", cmd + "\n");
+    socket.on("terminal:output", data => {
+        output.className = "output";
+        output.innerHTML = data.toString() || "";
+        if (output.innerHTML !== "") {
+            terminal.appendChild(output);
+        }
+        createPrompt();
+    });
+    createPrompt();
+}
+
+// Initialize
+createPrompt();
+
+window.onload = () => {
+    socket.on("file-data", fileData => {
+        myEditor.setValue(fileData, -1);
+    });
+    getFiles(document.getElementById("fileTree"));
+    if (activeFiles.length == 0) {
+        activeFiles.push("untitled.txt");
+        setTab("untitled.txt");
+    }
+};
