@@ -14,6 +14,7 @@
         <script src="ace/ext-language_tools.js"></script>
         <link rel="stylesheet" href="css/index.css" />
         <link rel="stylesheet" href="css/terminal.css" />
+        <link rel="stylesheet" href="css/settings.css" />
     </head>
     <body>
         <!-- Activity Bar -->
@@ -26,7 +27,7 @@
                     class="activity-btn active"
                     onclick="toggleExplorer()"
                     title="Explorer"
-                    style="margin-left: 0"
+                    style="margin-left: 7px"
                 >
                     <img
                         id="side-icons"
@@ -69,6 +70,7 @@
                     class="activity-btn"
                     onclick="openTerminal()"
                     title="Terminal"
+                    style="margin-right: 8px"
                 >
                     <!--<i class="fa-solid fa-terminal"></i>-->
                     <img
@@ -81,8 +83,8 @@
                 </div>
                 <div
                     class="activity-btn"
-                    style="margin-top: auto"
-                    onclick="toggleSettings()"
+                    style="margin-right: 8px; margin-top: auto"
+                    onclick="openSettings()"
                     title="Settings"
                 >
                     <!-- <i class="fas fa-cog"></i>-->
@@ -183,7 +185,11 @@
         <!-- Main Area -->
         <div class="main-area">
             <div class="tabs-bar" id="tabs-bar">
-                <button onclick="toggleExplorer()" id="files-menu">
+                <button
+                    onclick="toggleExplorer()"
+                    title="Explorer"
+                    id="files-menu"
+                >
                     <img
                         id="side-icons"
                         width="25"
@@ -193,6 +199,15 @@
                     />
                 </button>
                 <div class="container"></div>
+                <div class="more-menu" title="More">
+                    <img
+                        id="side-icons"
+                        width="25"
+                        height="25"
+                        src="/icons/more.png"
+                        alt="More"
+                    />
+                </div>
             </div>
 
             <div id="editor-container">
@@ -200,64 +215,319 @@
             </div>
         </div>
 
-        <!-- Right Settings Panel -->
-        <div class="settings-panel" id="settings-panel">
-            <div class="settings-header">
-                <span>Settings</span>
-                <i
-                    class="fas fa-times"
-                    onclick="toggleSettings()"
-                    style="cursor: pointer"
-                ></i>
-            </div>
-            <div class="settings-body">
-                <div class="setting-group">
-                    <label>Theme</label>
-                    <select
-                        id="theme-select"
-                        onchange="changeTheme(this.value)"
-                    ></select>
-                </div>
-
-                <div class="setting-group">
-                    <label>Font Size <span id="font-val">16</span>px</label>
-                    <input
-                        type="range"
-                        id="font-slider"
-                        min="12"
-                        max="24"
-                        value="16"
-                        oninput="updateFont(this.value)"
-                    />
-                </div>
-
-                <label class="checkbox-label">
-                    <input
-                        type="checkbox"
-                        id="word-wrap"
-                        checked
-                        onchange="toggleWrap(this.checked)"
-                    />
-                    Word Wrap
-                </label>
-                <label class="checkbox-label">
-                    <input
-                        type="checkbox"
-                        id="minimap"
-                        onchange="toggleMinimap(this.checked)"
-                    />
-                    Show Minimap
-                </label>
-
-                <hr />
-                <button onclick="toggleSettings()" class="btn-primary">
-                    Close
+        <!-- Settings -->
+        <div class="settings-card">
+            <div class="settings-header-tabs" role="tablist">
+                <button class="tab-btn active" data-target="panel-editor">
+                    Editor
                 </button>
+                <button class="tab-btn" data-target="panel-theme">Theme</button>
+                <button class="tab-btn" data-target="panel-behavior">
+                    Keyboard
+                </button>
+                <button class="tab-btn" data-target="panel-files">Files</button>
+                <button id="close-settings" class="tab-btn">X</button>
+            </div>
+
+            <div class="settings-content">
+                <div id="panel-editor" class="settings-panel active">
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Font Size</span>
+                            <span class="setting-description"
+                                >Adjust the default rendering text size inside
+                                the workspace.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <input
+                                type="number"
+                                id="fontSize"
+                                value="15"
+                                min="10"
+                                max="32"
+                            />
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Tab Size</span>
+                            <span class="setting-description"
+                                >Specify space count equivalent for indentation
+                                blocks.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <select id="tabSize">
+                                <option value="2">2 Spaces</option>
+                                <option value="4" selected>4 Spaces</option>
+                                <option value="8">8 Spaces</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Word Wrap</span>
+                            <span class="setting-description"
+                                >Wrap lines that exceed the maximum editor
+                                boundary width.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <label class="switch">
+                                <input type="checkbox" id="wrap" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-theme" class="settings-panel">
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Editor Theme</span>
+                            <span class="setting-description"
+                                >Set your global styling environment syntax
+                                configuration.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <select id="theme">
+                                <option value="ace/theme/monokai" selected>
+                                    Monokai
+                                </option>
+                                <option
+                                    value="ace/theme/tomorrow_night_eighties"
+                                >
+                                    Tomorrow Night 80s
+                                </option>
+                                <option value="ace/theme/dracula">
+                                    Dracula
+                                </option>
+                                <option value="ace/theme/terminal">
+                                    Terminal (Retro)
+                                </option>
+                                <option value="ace/theme/github">
+                                    Github Light
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Show Gutter</span>
+                            <span class="setting-description"
+                                >Toggle line number strip display visibility on
+                                left.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    id="showGutter"
+                                    checked
+                                />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label"
+                                >Highlight Active Line</span
+                            >
+                            <span class="setting-description"
+                                >Draw dynamic accent highlight under the current
+                                active line row.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    id="highlightActiveLine"
+                                    checked
+                                />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-behavior" class="settings-panel">
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Keyboard Handler</span>
+                            <span class="setting-description"
+                                >Map alternative terminal keyboard layouts and
+                                shortcuts scheme.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <select id="keyboardHandler">
+                                <option value="ace" selected>Default</option>
+                                <option value="ace/keyboard/vim">
+                                    Vim Bindings
+                                </option>
+                                <option value="ace/keyboard/emacs">
+                                    Emacs Bindings
+                                </option>
+                                <option value="ace/keyboard/sublime">
+                                    Sublime Text
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Auto Close Pairs</span>
+                            <span class="setting-description"
+                                >Automatically close brackets, curly braces, and
+                                quotes when typing.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    id="behavioursEnabled"
+                                    checked
+                                />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-files" class="settings-panel">
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Read Only Mode</span>
+                            <span class="setting-description"
+                                >Disallow editing operations inside input
+                                console space.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <label class="switch">
+                                <input type="checkbox" id="readOnly" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Show Print Margin</span>
+                            <span class="setting-description"
+                                >Show column layout rule line marking character
+                                limits.</span
+                            >
+                        </div>
+                        <div class="setting-control">
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    id="showPrintMargin"
+                                    checked
+                                />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-footer">
+                <div class="config-preview-title">
+                    <span>Ace Editor Configuration Object</span>
+                    <span class="status">live-sync</span>
+                </div>
+                <pre id="jsonPreview">
+// Editor options JSON will compile here...</pre
+                >
             </div>
         </div>
+
         <!-- Terminal -->
         <div class="terminal">
             <div class="terminal-body" id="terminal"></div>
+        </div>
+        <div id="more-menu">
+            <ul>
+                <li id="save-file">
+                    <img
+                        src="icons/new-folder.png"
+                        id="menu-icon"
+                        alt="Save File"
+                        title="Save File"
+                    />
+                    <span>Save File</span>
+                </li>
+                <li id="select-text">
+                    <img
+                        src="icons/new-file.png"
+                        id="menu-icon"
+                        alt="Select Text"
+                        title="Select Text"
+                    />
+                    <span>Select Text</span>
+                </li>
+                <li id="copy">
+                    <img
+                        src="icons/copy.png"
+                        id="menu-icon"
+                        alt="New Folder"
+                        title="New Folder"
+                    />
+                    <span>Copy</span>
+                </li>
+                <li id="move">
+                    <img
+                        src="icons/cut.png"
+                        id="menu-icon"
+                        alt="New Folder"
+                        title="New Folder"
+                    />
+                    <span>Move</span>
+                </li>
+                <li id="paste" style="display: none">
+                    <img
+                        src="icons/files.png"
+                        id="menu-icon"
+                        alt="New Folder"
+                        title="New Folder"
+                    />
+                    <span>Paste</span>
+                </li>
+                <li id="rename">
+                    <img
+                        src="icons/rename.png"
+                        id="menu-icon"
+                        alt="New Folder"
+                        title="New Folder"
+                    />
+                    <span>Rename</span>
+                </li>
+                <li id="delete">
+                    <img
+                        src="icons/delete.png"
+                        id="menu-icon"
+                        alt="New Folder"
+                        title="New Folder"
+                    />
+                    <span>Delete</span>
+                </li>
+                <li id="info">
+                    <img
+                        src="icons/new-folder.png"
+                        id="menu-icon"
+                        alt="New Folder"
+                        title="New Folder"
+                    />
+                    <span>Info</span>
+                </li>
+            </ul>
         </div>
 
         <!-- New Item Modal -->
@@ -284,8 +554,16 @@
                 </div>
             </div>
         </div>
+        <!-- PRETTIER FORMATOR -->
+        <script src="./libs/prettier/standalone.js"></script>
+        <script src="./libs/prettier/plugins/babel.js"></script>
+        <script src="./libs/prettier/plugins/estree.js"></script>
+        <script src="./libs/prettier/plugins/html.js"></script>
+        <script src="./libs/prettier/plugins/postcss.js"></script>
+        <script src="./libs/prettier/plugins/typescript.js"></script>
+        <!-- PRETTIER FORMATOR -->
         <script src="js/socket.io.min.js"></script>
         <script type="module" src="js/tree.js"></script>
-        <script src="js/index.js"></script>
+        <script src="js/settings.js"></script>
     </body>
 </html>

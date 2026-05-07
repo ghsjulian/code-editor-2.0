@@ -193,7 +193,6 @@ const createSocket = httpServer => {
                 const { source, destination } = data;
                 const srcPath = path.resolve(source);
                 const destPath = path.resolve(destination);
-                console.log(data);
 
                 if (!fs.existsSync(srcPath)) {
                     console.log(`Source file not found: ${srcPath}`);
@@ -210,8 +209,62 @@ const createSocket = httpServer => {
                 console.error(`Error moving file: ${error.message}`);
             }
         });
+        // Rename File ----
+        socket.on("rename-file", data => {
+            try {
+                const { path: oldPath, name: newName } = data;
+                if (!fs.existsSync(oldPath)) {
+                    console.log(`File not found: ${oldPath}`);
+                    return;
+                }
+                const stats = fs.statSync(oldPath);
+                if (!stats.isFile()) {
+                    console.log(`Not a file: ${oldPath}`);
+                    return;
+                }
+                // Get directory of old file
+                const dir = path.dirname(oldPath);
+                // Create new full path
+                const newPath = path.join(dir, newName);
+                // Rename file
+                fs.renameSync(oldPath, newPath);
+                console.log(`\n[+] File renamed successfully\n`);
+            } catch (err) {
+                console.error("Rename error:", err);
+            }
+        });
+        
+        // Rename Folder ----
+        socket.on("rename-folder", data => {
+            try {
+                const { path: oldPath, name: newName } = data;
+                if (!fs.existsSync(oldPath)) {
+                    console.log(`Folder not found: ${oldPath}`);
+                    return;
+                }
+                const stats = fs.statSync(oldPath);
+                if (!stats.isDirectory()) {
+                    console.log(`Not a folder: ${oldPath}`);
+                    return;
+                }
+                // Get parent directory
+                const parentDir = path.dirname(oldPath);
+                // New folder path
+                const newPath = path.join(parentDir, newName);
+                // Optional: prevent overwrite
+                if (fs.existsSync(newPath)) {
+                    console.log(`Target folder already exists: ${newPath}`);
+                    return;
+                }
+                // Rename (works for folders too)
+                fs.renameSync(oldPath, newPath);
+                console.log(`\n[+] Folder renamed successfully\n`);
+            } catch (err) {
+                console.error("Rename folder error:", err);
+            }
+        });
         // Open File In Editor ----
-        socket.on("open-file", async(fpath) => {
+        socket.on("open-file", async fpath => {
             const filePath = path.resolve(fpath);
             if (!fs.existsSync(filePath)) {
                 console.log(`Source file not found: ${filePath}`);
@@ -223,7 +276,7 @@ const createSocket = httpServer => {
                 return;
             }
             const fileData = await fs.readFileSync(filePath, "utf8");
-            socket.emit("file-data",fileData)
+            socket.emit("file-data", fileData);
         });
         socket.on("terminal:input", input => {
             // Check if process is still alive and stream is open

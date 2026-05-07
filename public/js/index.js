@@ -7,6 +7,7 @@ ace.config.set("basePath", "ace/");
 // Enable the Language Tools Extension
 ace.require("ace/ext/language_tools");
 
+/*
 editor.setOptions({
     // Visuals
     theme: "ace/theme/tomorrow_night_eighties",
@@ -29,7 +30,76 @@ editor.setOptions({
     useSoftTabs: true,
     tabSize: 4
 });
+*/
+// editor.setTheme("ace/theme/one_dark");
+editor.setOptions({
+    // =========================
+    // THEME + MODE (CORE)
+    // =========================
+    // theme: "ace/theme/tomorrow_night_eighties",
+    theme: "ace/theme/tomorrow_night_eighties",
+    mode: "ace/mode/javascript",
 
+    // =========================
+    // VISUAL EXPERIENCE
+    // =========================
+    fontSize: "17px",
+    lineHeight: 30,
+    showPrintMargin: false,
+    showGutter: true,
+    highlightActiveLine: true,
+    highlightSelectedWord: true,
+    wrap: false,
+    scrollPastEnd: 0.5,
+
+    // Cursor / feel
+    cursorStyle: "smooth",
+    cursorBlinking: true,
+
+    // =========================
+    // INDENTATION / FORMAT FEEL
+    // =========================
+    tabSize: 4,
+    useSoftTabs: true,
+    behavioursEnabled: true, // auto brackets, quotes, etc
+    autoScrollEditorIntoView: true,
+    displayIndentGuides: true,
+
+    // =========================
+    // AUTOCOMPLETE SYSTEM
+    // =========================
+    enableBasicAutocompletion: true,
+    enableLiveAutocompletion: true,
+    enableSnippets: true,
+
+    // more aggressive autocomplete behavior
+    liveAutocompletionDelay: 200,
+    liveAutocompletionThreshold: 1,
+
+    // =========================
+    // ADVANCED EDITING FEATURES
+    // =========================
+    selectionStyle: "text",
+    useTextareaForIME: true,
+    copyWithEmptySelection: true,
+
+    // =========================
+    // PERFORMANCE (important for big files)
+    // =========================
+    //maxLines: Infinity,
+    minLines: 1,
+
+    // =========================
+    // FIND / REPLACE POWER
+    // =========================
+    animatedScroll: true,
+    scrollSpeed: 0.05,
+
+    // =========================
+    // KEYBOARD EXPERIENCE
+    // =========================
+    useSoftTabs: true
+});
 // Update Cursor Position in Status Bar (if you uncommented it)
 editor.selection.on("changeCursor", function () {
     const pos = editor.getCursorPosition();
@@ -38,27 +108,4 @@ editor.selection.on("changeCursor", function () {
     const status = document.getElementById("cursor-pos");
     if (status) status.innerText = `Ln ${line}, Col ${col}`;
 });
-
-
-
-function toggleExplorer() {
-    document.getElementById("explorer-sidebar").classList.toggle("open");
-}
-
-const openTerminal = () => {
-    const terminalX = document.querySelector(".terminal");
-    terminalX.classList.toggle("openTerm");
-    terminalX.style.display = terminalX.classList.contains("openTerm")
-        ? "block"
-        : "none";
-};
-
-
-
-
-function toggleSettings() {
-    alert(
-        "Settings panel coming in next update.\n\nCurrent features:\n• Full folder tree\n• Long press context menu\n• Tabs & Ace Editor"
-    );
-}
 

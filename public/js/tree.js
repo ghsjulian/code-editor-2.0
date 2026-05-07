@@ -8,15 +8,20 @@ import {
     copyFolder,
     moveFile,
     moveFolder,
-    openFile
+    openFile,
+    renameFile,
+    renameFolder
 } from "./client-socket.js";
 import { getAceMode } from "./get-ace-mode.js";
 
 var cache = null;
 var paste = null;
 const activeFiles = [];
+var currentFile = null;
 const pasteElem = document.querySelector("#paste");
 const tabContainer = document.querySelector(".container");
+const moreMenu = document.querySelector("#more-menu");
+const moreBtn = document.querySelector(".more-menu");
 const myEditor = ace.edit("editor");
 
 const renderFiles = async (treeContainer, path) => {
@@ -140,8 +145,12 @@ const setFileAction = (element, node) => {
         const mode = getAceMode(node.name);
         await openFile(node.path);
         myEditor.session.setMode(mode);
-        activeFiles.push(node.name);
-        setTab(node.name);
+        activeFiles.push(node);
+        setTab(node);
+        currentFile = {
+            name: node.name,
+            path: node.path
+        };
         document.getElementById("explorer-sidebar").classList.toggle("open");
     });
 };
@@ -151,8 +160,9 @@ const openFileInput = (target, path) => {
     nodeDiv.className = "tree-node";
     const fileDiv = document.createElement("div");
     fileDiv.className = "file-item";
+    const icon = getIcon("file.txtxx");
     fileDiv.innerHTML = `
-        <span class="file-icon">📑</span> 
+        <span class="file-icon">${icon}</span> 
         <span class="node-name"></span> 
         <input type="text" id="filename" placeholder="Enter file name" enterkeyhint="go" autocomplete="off" />
     `;
@@ -170,6 +180,9 @@ const openFileInput = (target, path) => {
             input.remove();
             getFiles(document.getElementById("fileTree")); // Refresh full tree
         }
+    });
+    input.addEventListener("blur", e => {
+        nodeDiv.remove();
     });
     nodeDiv.appendChild(fileDiv);
     target.nextSibling.appendChild(nodeDiv);
@@ -198,11 +211,62 @@ const openFolderInput = (target, path) => {
             getFiles(document.getElementById("fileTree"));
         }
     });
+    input.addEventListener("blur", e => {
+        nodeDiv.remove();
+    });
     nodeDiv.appendChild(header);
     target.nextSibling.appendChild(nodeDiv);
     input.focus();
 };
 
+const renameFileInput = (parent, path) => {
+    const filename = parent.querySelector(".node-name").textContent;
+    const icon = getIcon(filename);
+    parent.innerHTML = `
+        <span class="file-icon">${icon}</span> 
+        <span class="node-name"></span> 
+        <input type="text" id="filename" value="${filename}" placeholder="Enter file name" enterkeyhint="go" autocomplete="off" />
+    `;
+    const input = parent.querySelector("input");
+    input.addEventListener("input", e => {
+        parent.querySelector(".file-icon").innerHTML = getIcon(
+            input.value.trim()
+        );
+    });
+    input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            const val = input.value.trim();
+            if (!val) return;
+            renameFile(path, val);
+            parent.querySelector(".node-name").textContent = val;
+            input.remove();
+        }
+    });
+    input.focus();
+};
+const renameFolderInput = (parent, path) => {
+    const folderename = parent.querySelector(".node-name").textContent;
+    parent.innerHTML = `
+        <span class="toggle-icon"></span>
+        <span class="folder-icon">
+       <img id="icon" src="icons/folder.png" alt="folder" />
+        </span>
+        <span class="node-name"><span>
+        <input type="text" id="folder-name" value="${folderename}" placeholder="Folder name" enterkeyhint="go" autocomplete="off"/>
+    `;
+
+    const input = parent.querySelector("input");
+    input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            const val = input.value.trim();
+            if (!val) return;
+            renameFolder(path, val);
+            parent.querySelector(".node-name").textContent = val;
+            input.remove();
+        }
+    });
+    input.focus();
+};
 function showContextMenu(e, path, parent) {
     const menu = document.getElementById("context-menu");
     menu.style.display = "block";
@@ -212,7 +276,9 @@ function showContextMenu(e, path, parent) {
     menu.style.top = clickY - 90 + "px";
 
     menu.onclick = async event => {
-        const actionType = event.target.id;
+        // const actionType = event.target.id;
+        const actionType = event.target.closest("li").id;
+        console.log(actionType);
         if (!actionType) return;
 
         const nodeElem = parent.querySelector(".node-name");
@@ -222,7 +288,13 @@ function showContextMenu(e, path, parent) {
 
         if (actionType === "new-file") openFileInput(parent, path);
         else if (actionType === "new-folder") openFolderInput(parent, path);
-        else if (actionType === "delete") {
+        else if (actionType === "rename") {
+            if (isFolder) {
+                renameFolderInput(parent, path);
+            } else {
+                renameFileInput(parent, path);
+            }
+        } else if (actionType === "delete") {
             deleteFile(isFolder ? "folder" : "file", currentPath);
             parent.parentElement.remove();
         } else if (actionType === "copy" || actionType === "move") {
@@ -286,21 +358,20 @@ function showContextMenu(e, path, parent) {
         menu.style.display = "none";
     };
 }
-
 document.addEventListener("click", e => {
     const menu = document.getElementById("context-menu");
     if (menu && !menu.contains(e.target)) menu.style.display = "none";
 });
-
-const setTab = filename => {
+const setTab = node => {
     const list = document.createElement("div");
     const p = document.createElement("p");
     const span = document.createElement("span");
 
     list.className = "list";
-    p.textContent = filename;
+    p.textContent = node.name;
+    p.setAttribute("path", node.path);
     span.textContent = "x";
-    const icon = getIcon(filename);
+    const icon = getIcon(node.name);
     list.innerHTML = icon;
 
     list.appendChild(p);
@@ -310,7 +381,7 @@ const setTab = filename => {
 
     span.onclick = e => {
         const index = activeFiles.findIndex(
-            file => file === filename || file.name === filename
+            file => file === node.name || file.name === node.name
         );
         if (index !== -1) {
             activeFiles.splice(index, 1);
@@ -326,10 +397,15 @@ const setTab = filename => {
             } else {
                 tabContainer.innerHTML = "";
                 activeFiles.forEach(async f => {
-                    setTab(f.name || f);
-                    await openFile(f.name || f);
-                    const mode = getAceMode(f.name || f);
+                    setTab(f);
+                    await openFile(f.name);
+                    const mode = getAceMode(f.name);
                     myEditor.session.setMode(mode);
+                    formatEditorCode(f.name);
+                    currentFile = {
+                        name: f.name,
+                        path: f.path
+                    };
                 });
             }
         }
@@ -344,6 +420,11 @@ const setTab = filename => {
             return;
         }
         await openFile(name);
+        formatEditorCode(name);
+        currentFile = {
+            name: name,
+            path: e.target.getAttribute("path") || node.path || null
+        };
     };
 };
 
@@ -429,8 +510,139 @@ function processCommand(cmd) {
     createPrompt();
 }
 
-// Initialize
-createPrompt();
+/*-------------> CODE FORMATOR <--------------*/
+
+const getParserByExt = ext => {
+    switch (ext) {
+        case "js":
+        case "jsx":
+            return "babel";
+        case "ts":
+        case "tsx":
+            return "typescript";
+        case "html":
+        case "htm":
+            return "html";
+        case "css":
+            return "css";
+        case "json":
+            return "json";
+        default:
+            return null;
+    }
+};
+const formatEditorCode = async filename => {
+    if (!myEditor || !filename) return;
+    const code = myEditor.getValue();
+    const ext = filename.split(".").pop().toLowerCase();
+    const parser = getParserByExt(ext);
+    if (!parser) {
+        console.log("⚠️ No Formator For : ", ext);
+        return;
+    }
+    try {
+        const formatted = await prettier.format(code, {
+    parser: parser,
+    plugins: prettierPlugins,
+
+    // =========================
+    // INDENTATION
+    // =========================
+    tabWidth: 4,
+    useTabs: false,
+
+    // =========================
+    // SYNTAX STYLE
+    // =========================
+    semi: true,
+    singleQuote: false,
+    jsxSingleQuote: false,
+
+    // =========================
+    // TRAILING STYLE (VERY IMPORTANT for git diff clean code)
+    // =========================
+    trailingComma: "all",
+
+    // =========================
+    // OBJECT / ARRAY STYLE
+    // =========================
+    bracketSpacing: true,
+
+    // =========================
+    // STRING / LINE WRAPPING
+    // =========================
+    printWidth: 100,
+
+    // =========================
+    // HTML / JSX BEHAVIOR
+    // =========================
+    htmlWhitespaceSensitivity: "css",
+    jsxBracketSameLine: false,
+
+    // =========================
+    // FILE CONTROL
+    // =========================
+    requirePragma: false,
+    insertPragma: false,
+
+    // =========================
+    // ADVANCED CONSISTENCY
+    // =========================
+    arrowParens: "always", // always (x) => {} instead of x => {}
+    endOfLine: "lf"        // consistent cross-platform
+});
+        /*
+        const formatted = await prettier.format(code, {
+            parser: parser,
+            plugins: prettierPlugins,
+            tabWidth: 4,
+            useTabs: false,
+            semi: true,
+            singleQuote: false,
+            doubleQuote : true
+        });
+        */
+        // preserve cursor
+        const cursor = myEditor.getCursorPosition();
+        myEditor.setValue(formatted, -1);
+        myEditor.moveCursorToPosition(cursor);
+        console.log("✅ Code Formated !");
+    } catch (err) {
+        console.error("Formatting error : ", err);
+    }
+};
+
+/*-------- MORE MENU --------*/
+moreBtn.onclick = () => {
+    moreMenu.style.display = "block";
+};
+document.addEventListener("click", e => {
+    const target = e.target.closest(".more-menu");
+    const menuItem = e.target.closest("#more-menu li");
+
+    if (moreBtn && !moreBtn.contains(target)) {
+        moreMenu.style.display = "none";
+    }
+    // Here i will add action menu
+    if (!menuItem) return;
+    menuItem.onclick = e => {
+        const targetList = e.target.closest("li");
+        const actionType = targetList.id;
+
+        switch (actionType) {
+            case "save-file":
+                if (!currentFile) return;
+                formatEditorCode(currentFile?.name);
+                break;
+            case "select-text":
+                // code
+                break;
+
+            default:
+            // code
+        }
+    };
+});
 
 window.onload = () => {
     socket.on("file-data", fileData => {
@@ -438,7 +650,8 @@ window.onload = () => {
     });
     getFiles(document.getElementById("fileTree"));
     if (activeFiles.length == 0) {
-        activeFiles.push("untitled.txt");
-        setTab("untitled.txt");
+        activeFiles.push({ name: "untitled.txt", path: null });
+        setTab({ name: "untitled.txt", path: null });
     }
+    createPrompt();
 };

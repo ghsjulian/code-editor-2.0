@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Preferences</title>
+    <style>
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #111823;
+            --bg-tertiary: #1a2332;
+            --accent-blue: #00e5ff;
+            --accent-blue-dim: rgba(0, 229, 255, 0.15);
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --border-color: #23354f;
+            --radius: 8px;
+            --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Settings Container */
+        .settings-card {
+            background-color: var(--bg-secondary);
+            width: 100%;
+            max-width: 650px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 229, 255, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Tabs System */
+        .settings-header-tabs {
+            display: flex;
+            background: linear-gradient(180deg, var(--bg-tertiary), var(--bg-secondary));
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 8px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 16px 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            outline: none;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        /* Active tab indicator strip */
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--accent-blue);
+            box-shadow: 0 0 8px var(--accent-blue);
+        }
+
+        /* Content Panel */
+        .settings-content {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 450px;
+        }
+
+        .settings-panel {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .settings-panel.active {
+            display: flex;
+        }
+
+        /* Group Elements */
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(35, 53, 79, 0.4);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .setting-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 70%;
+        }
+
+        .setting-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .setting-description {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Form Controls */
+        .setting-control {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Custom Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-muted);
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-blue-dim);
+            border-color: var(--accent-blue);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+            background-color: var(--accent-blue);
+            box-shadow: 0 0 6px var(--accent-blue);
+        }
+
+        /* Select Options */
+        select, input[type="number"] {
+            background-color: var(--bg-tertiary);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: var(--accent-blue);
+        }
+
+        input[type="number"] {
+            width: 70px;
+            font-family: var(--font-mono);
+            text-align: center;
+        }
+
+        /* Live Config Output Preview */
+        .settings-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-primary);
+        }
+
+        .config-preview-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .config-preview-title span.status {
+            color: var(--accent-blue);
+            font-family: var(--font-mono);
+        }
+
+        pre {
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(35, 53, 79, 0.6);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #a5d6ff;
+            overflow-x: auto;
+            max-height: 120px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="settings-card">
+        <div class="settings-header-tabs" role="tablist">
+            <button class="tab-btn active" data-target="panel-editor">Editor</button>
+            <button class="tab-btn" data-target="panel-theme">Theme</button>
+            <button class="tab-btn" data-target="panel-behavior">Keyboard</button>
+            <button class="tab-btn" data-target="panel-files">Files</button>
+        </div>
+
+        <div class="settings-content">
+            
+            <div id="panel-editor" class="settings-panel active">
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Font Size</span>
+                        <span class="setting-description">Adjust the default rendering text size inside the workspace.</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" id="fontSize" value="14" min="10" max="32">
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Tab Size</span>
+                        <span class="setting-description">Specify space count equivalent for indentation blocks.</span>
+                    </div>
+                    <div class="setting-control">
+                        <select id="tabSize">
+                            <option value="2">2 Spaces</option>
+                            <option value="4" selected>4 Spaces</option>
+                            <option value="8">8 Spaces</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Word Wrap</span>
+                        <span class="setting-description">Wrap lines that exceed the maximum editor boundary width.</span>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="wrap" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-theme" class="settings-panel">
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Editor Theme</span>
+                        <span class="setting-description">Set your global styling environment syntax configuration.</span>
+                    </div>
+                    <div class="setting-control">
+                        <select id="theme">
+                            <option value="ace/theme/monokai" selected>Monokai</option>
+                            <option value="ace/theme/tomorrow_night_eighties">Tomorrow Night 80s</option>
+                            <option value="ace/theme/dracula">Dracula</option>
+                            <option value="ace/theme/terminal">Terminal (Retro)</option>
+                            <option value="ace/theme/github">Github Light</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Show Gutter</span>
+                        <span class="setting-description">Toggle line number strip display visibility on left.</span>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="showGutter" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Highlight Active Line</span>
+                        <span class="setting-description">Draw dynamic accent highlight under the current active line row.</span>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="highlightActiveLine" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-behavior" class="settings-panel">
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Keyboard Handler</span>
+                        <span class="setting-description">Map alternative terminal keyboard layouts and shortcuts scheme.</span>
+                    </div>
+                    <div class="setting-control">
+                        <select id="keyboardHandler">
+                            <option value="ace" selected>Default</option>
+                            <option value="ace/keyboard/vim">Vim Bindings</option>
+                            <option value="ace/keyboard/emacs">Emacs Bindings</option>
+                            <option value="ace/keyboard/sublime">Sublime Text</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Auto Close Pairs</span>
+                        <span class="setting-description">Automatically close brackets, curly braces, and quotes when typing.</span>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="behavioursEnabled" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-files" class="settings-panel">
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Read Only Mode</span>
+                        <span class="setting-description">Disallow editing operations inside input console space.</span>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="readOnly">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Show Print Margin</span>
+                        <span class="setting-description">Show column layout rule line marking character limits.</span>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            <input type="checkbox" id="showPrintMargin" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="settings-footer">
+            <div class="config-preview-title">
+                <span>Ace Editor Configuration Object</span>
+                <span class="status">live-sync</span>
+            </div>
+            <pre id="jsonPreview">// Editor options JSON will compile here...</pre>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching logic
+        const tabs = document.querySelectorAll('.tab-btn');
+        const panels = document.querySelectorAll('.settings-panel');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Deactivate active indicators
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+
+                // Set current selected targets
+                tab.classList.add('active');
+                const activePanel = document.getElementById(tab.getAttribute('data-target'));
+                activePanel.classList.add('active');
+            });
+        });
+
+        // Elements tracking
+        const inputs = {
+            fontSize: document.getElementById('fontSize'),
+            tabSize: document.getElementById('tabSize'),
+            wrap: document.getElementById('wrap'),
+            theme: document.getElementById('theme'),
+            showGutter: document.getElementById('showGutter'),
+            highlightActiveLine: document.getElementById('highlightActiveLine'),
+            keyboardHandler: document.getElementById('keyboardHandler'),
+            behavioursEnabled: document.getElementById('behavioursEnabled'),
+            readOnly: document.getElementById('readOnly'),
+            showPrintMargin: document.getElementById('showPrintMargin')
+        };
+
+        const jsonPreview = document.getElementById('jsonPreview');
+
+        // Main compiler function logic
+        function generateConfig() {
+            const config = {
+                theme: inputs.theme.value,
+                fontSize: parseInt(inputs.fontSize.value) || 14,
+                tabSize: parseInt(inputs.tabSize.value) || 4,
+                wrap: inputs.wrap.checked,
+                showGutter: inputs.showGutter.checked,
+                highlightActiveLine: inputs.highlightActiveLine.checked,
+                keyboardHandler: inputs.keyboardHandler.value === 'ace' ? null : inputs.keyboardHandler.value,
+                behavioursEnabled: inputs.behavioursEnabled.checked,
+                readOnly: inputs.readOnly.checked,
+                showPrintMargin: inputs.showPrintMargin.checked
+            };
+
+            // Display formatted configuration
+            jsonPreview.textContent = `// Pass this object to editor.setOptions(config);\nconst editorConfig = ${JSON.stringify(config, null, 4)};`;
+        }
+
+        // Add Event Listeners for Live Configuration Syncing
+        Object.values(inputs).forEach(input => {
+            const eventType = input.type === 'checkbox' ? 'change' : 'input';
+            input.addEventListener(eventType, generateConfig);
+        });
+
+        // Initialize state on render
+        generateConfig();
+    </script>
+</body>
+</html>

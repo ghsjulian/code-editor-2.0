@@ -85,12 +85,12 @@ Based on the repository's backend architecture, the primary stack utilizes the f
 ### ✅ Main Site Screenshot 
 
 
-<img src="./ss/s1.jpg"/><br/><br/>
-<img src="./ss/s2.jpg"/><br/><br/>
-<img src="./ss/s3.jpg"/><br/><br/>
-<img src="./ss/s4.jpg"/><br/><br/>
-<img src="./ss/s5.jpg"/><br/><br/>
-<img src="./ss/s6.jpg"/><br/><br/>
+<img src="./ss-demo/s1.jpg"/><br/><br/>
+<img src="./ss-demo/s2.jpg"/><br/><br/>
+<img src="./ss-demo/s3.jpg"/><br/><br/>
+<img src="./ss-demo/s4.jpg"/><br/><br/>
+<img src="./ss-demo/s5.jpg"/><br/><br/>
+<img src="./ss-demo/s6.jpg"/><br/><br/>
 
 
 ---
