@@ -445,24 +445,24 @@ body {
     font-weight: 600;
     letter-spacing: 0.2px;
     line-height: 30px;
+    background: linear-gradient(120deg, #0a0f1c, #05070f) !important;
 }
 /*
 #editor .ace_gutter-layer {
     width: 15px;
     contain: none;
 }
+*/
 .ace_gutter {
     background: #111 !important;
     color: #888;
 }
-
 .ace_cursor {
-    border-left: 2px solid #00ffcc;
-}
-#editor {
-    background: linear-gradient(120deg, #0a0f1c, #05070f) !important;
+    border-left: 2.2px solid #29ffcf;
+    width: 2px!important;
 }
 
+/*
 .ace_editor,
 .ace_scroller {
     background: transparent !important;

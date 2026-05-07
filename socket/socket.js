@@ -32,6 +32,23 @@ const createSocket = httpServer => {
             socket.emit("terminal:output", data.toString());
         });
 
+        // Save File ---
+        socket.on("save-file", async file => {
+            try {
+                const { path: path, content } = file;
+                // Check file exists
+                console.log(file)
+                if (!(await fs.existsSync(path))) {
+                    console.log("File does not exist");
+                    return;
+                }
+                // Replace old content with new content
+                await fs.writeFileSync(path, content, "utf8");
+                console.log("\n[+] File saved successfully\n");
+            } catch (error) {
+                console.log("Error saving file - ", error.message);
+            }
+        });
         // Creating New File ---
         socket.on("create-file", async filepath => {
             try {
@@ -233,7 +250,7 @@ const createSocket = httpServer => {
                 console.error("Rename error:", err);
             }
         });
-        
+
         // Rename Folder ----
         socket.on("rename-folder", data => {
             try {

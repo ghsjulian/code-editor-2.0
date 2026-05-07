@@ -53,3 +53,8 @@ export const renameFolder = async (path, name) => {
     socket.emit("rename-folder", { path, name });
     return true;
 };
+export const saveFile = async (currentFile) => {
+    if (!currentFile) return;
+    socket.emit("save-file", currentFile);
+    return true;
+};

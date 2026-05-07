@@ -10,8 +10,7 @@ import {
     moveFolder,
     openFile,
     renameFile,
-    renameFolder,
-    saveFile
+    renameFolder
 } from "./client-socket.js";
 import { getAceMode } from "./get-ace-mode.js";
 
@@ -19,7 +18,6 @@ var cache = null;
 var paste = null;
 const activeFiles = [];
 var currentFile = null;
-var untitledText = "";
 const pasteElem = document.querySelector("#paste");
 const tabContainer = document.querySelector(".container");
 const moreMenu = document.querySelector("#more-menu");
@@ -137,37 +135,23 @@ function setupContextMenuEvents(element, path) {
 const setFileAction = (element, node) => {
     const file = element.querySelector(".node-name");
     file.addEventListener("click", async () => {
-        // Find if the file is already in activeFiles to prevent multiple fetches
-        const existing = activeFiles.find(f => f.path === node.path);
-
-        if (existing) {
-            currentFile = existing;
-            myEditor.session.setMode(getAceMode(currentFile.name));
-            myEditor.setValue(currentFile.content, -1);
-            setActiveTabByPath(currentFile.path);
+        if (activeFiles.includes(node.name)) {
             document
                 .getElementById("explorer-sidebar")
-                .classList.remove("open");
+                .classList.toggle("open");
             return;
         }
 
         const mode = getAceMode(node.name);
-        // Request open file; socket "file-data" will populate currentFile.content
         await openFile(node.path);
-
-        // We initialize the object; the actual content will be filled by socket.on("file-data")
-        const newFile = {
-            name: node.name,
-            path: node.path,
-            content: ""
-        };
-
-        activeFiles.push(newFile);
-        currentFile = newFile;
         myEditor.session.setMode(mode);
-        setTab(newFile);
-
-        document.getElementById("explorer-sidebar").classList.remove("open");
+        activeFiles.push(node);
+        setTab(node);
+        currentFile = {
+            name: node.name,
+            path: node.path
+        };
+        document.getElementById("explorer-sidebar").classList.toggle("open");
     });
 };
 
@@ -194,7 +178,7 @@ const openFileInput = (target, path) => {
             if (!val) return;
             createFile(path + "/" + val);
             input.remove();
-            getFiles(document.getElementById("fileTree"));
+            getFiles(document.getElementById("fileTree")); // Refresh full tree
         }
     });
     input.addEventListener("blur", e => {
@@ -260,7 +244,6 @@ const renameFileInput = (parent, path) => {
     });
     input.focus();
 };
-
 const renameFolderInput = (parent, path) => {
     const folderename = parent.querySelector(".node-name").textContent;
     parent.innerHTML = `
@@ -284,7 +267,6 @@ const renameFolderInput = (parent, path) => {
     });
     input.focus();
 };
-
 function showContextMenu(e, path, parent) {
     const menu = document.getElementById("context-menu");
     menu.style.display = "block";
@@ -294,9 +276,10 @@ function showContextMenu(e, path, parent) {
     menu.style.top = clickY - 90 + "px";
 
     menu.onclick = async event => {
-        const li = event.target.closest("li");
-        if (!li) return;
-        const actionType = li.id;
+        // const actionType = event.target.id;
+        const actionType = event.target.closest("li").id;
+        console.log(actionType);
+        if (!actionType) return;
 
         const nodeElem = parent.querySelector(".node-name");
         const currentPath = nodeElem.id;
@@ -306,8 +289,11 @@ function showContextMenu(e, path, parent) {
         if (actionType === "new-file") openFileInput(parent, path);
         else if (actionType === "new-folder") openFolderInput(parent, path);
         else if (actionType === "rename") {
-            if (isFolder) renameFolderInput(parent, path);
-            else renameFileInput(parent, path);
+            if (isFolder) {
+                renameFolderInput(parent, path);
+            } else {
+                renameFileInput(parent, path);
+            }
         } else if (actionType === "delete") {
             deleteFile(isFolder ? "folder" : "file", currentPath);
             parent.parentElement.remove();
@@ -319,12 +305,27 @@ function showContextMenu(e, path, parent) {
                 type: actionType.toUpperCase(),
                 element: parent
             };
-            paste = { ...cache, status: true };
+            paste = {
+                path: currentPath,
+                name: currentName,
+                isFolder,
+                type: actionType.toUpperCase(),
+                element: parent,
+                status: true
+            };
             pasteElem.style.display = "flex";
-            pasteElem.innerHTML = `<img src="icons/files.png" id="menu-icon" alt="Paste" /><span>Paste (${paste.type})</span>`;
+            pasteElem.innerHTML = `<img
+                                src="icons/files.png"
+                                id="menu-icon"
+                                alt="New Folder"
+                                title="New Folder"
+                            /><span>Paste (${paste.type})</span>
+                            `;
         } else if (actionType === "paste") {
-            const destFolderPath = currentPath;
+            const destFolderPath = currentPath; // The folder we are pasting INTO
             if (!cache || !isFolder) return;
+
+            // FIX: Destination must include the original filename for fs.copyFileSync to work
             const fullDestPath = `${destFolderPath}/${cache.name}`;
             const data = { source: cache.path, destination: fullDestPath };
 
@@ -352,89 +353,94 @@ function showContextMenu(e, path, parent) {
             cache = null;
             paste = null;
             pasteElem.style.display = "none";
+            pasteElem.textContent = `Paste`;
         }
         menu.style.display = "none";
     };
 }
-
 document.addEventListener("click", e => {
     const menu = document.getElementById("context-menu");
     if (menu && !menu.contains(e.target)) menu.style.display = "none";
 });
-
 const setTab = node => {
     const list = document.createElement("div");
     const p = document.createElement("p");
     const span = document.createElement("span");
 
     list.className = "list";
-    list.setAttribute("data-path", node.path);
     p.textContent = node.name;
     p.setAttribute("path", node.path);
     span.textContent = "x";
+    const icon = getIcon(node.name);
+    list.innerHTML = icon;
 
-    list.innerHTML = getIcon(node.name);
     list.appendChild(p);
     list.appendChild(span);
     tabContainer.appendChild(list);
     setActiveTab(p);
 
     span.onclick = e => {
-        e.stopPropagation();
-        const index = activeFiles.findIndex(file => file.path === node.path);
+        const index = activeFiles.findIndex(
+            file => file === node.name || file.name === node.name
+        );
         if (index !== -1) {
             activeFiles.splice(index, 1);
             list.remove();
-
+            myEditor.setValue("", -1);
             if (activeFiles.length === 0) {
-                currentFile = { name: "untitled.txt", path: null, content: "" };
-                activeFiles.push(currentFile);
+                const defaultFile = "untitled.txt";
+                activeFiles.push(defaultFile);
                 tabContainer.innerHTML = "";
-                setTab(currentFile);
-                myEditor.session.setMode(getAceMode("untitled.txt"));
-                myEditor.setValue(untitledText || "", -1);
+                setTab({ name: defaultFile, path: null });
+                const mode = getAceMode(defaultFile);
+                myEditor.session.setMode(mode);
             } else {
-                // Switch to the last available tab
-                const lastFile = activeFiles[activeFiles.length - 1];
-                currentFile = lastFile;
-                myEditor.session.setMode(getAceMode(currentFile.name));
-                myEditor.setValue(currentFile.content, -1);
-                setActiveTabByPath(currentFile.path);
+                tabContainer.innerHTML = "";
+                activeFiles.forEach(async f => {
+                    setTab(f);
+                    await openFile(f.name);
+                    const mode = getAceMode(f.name);
+                    myEditor.session.setMode(mode);
+                    formatEditorCode(f.name);
+                    currentFile = {
+                        name: f.name,
+                        path: f.path
+                    };
+                });
             }
         }
     };
-
     p.onclick = async e => {
-        const fileData = activeFiles.find(f => f.path === node.path);
-        if (fileData) {
-            currentFile = fileData;
-            setActiveTab(p);
-            myEditor.session.setMode(getAceMode(currentFile.name));
+        setActiveTab(e.target);
+        const name = e.target.textContent;
+        const mode = getAceMode(name);
+        myEditor.session.setMode(mode);
+        currentFile.name = name;
+            currentFile.path = e.target.getAttribute("path") || node.path || null
+            
+        if (name === "untitled.txt") {
+            console.log("untitled - ", currentFile);
             myEditor.setValue(currentFile.content, -1);
-            formatEditorCode(currentFile.name);
+            return;
         }
+        //  await openFile(name);
+        myEditor.setValue(currentFile.content, -1);
+        formatEditorCode(name);
+        console.log(currentFile);
     };
 };
 
 const setActiveTab = element => {
     const parent = element.parentElement;
     if (parent) {
-        document
-            .querySelectorAll(".list.active")
-            .forEach(el => el.classList.remove("active"));
+        document.querySelectorAll(".list.active").forEach(el => {
+            el.classList.remove("active");
+        });
         parent.classList.add("active");
     }
 };
 
-const setActiveTabByPath = path => {
-    const tabs = document.querySelectorAll(".list");
-    tabs.forEach(tab => {
-        tab.classList.remove("active");
-        if (tab.getAttribute("data-path") === path) tab.classList.add("active");
-    });
-};
-
-/*----------- TERMINAL -----------*/
+/*----------- CREATING FOR TERMINAL -----------*/
 const terminal = document.getElementById("terminal");
 let commandHistory = [];
 let historyIndex = -1;
@@ -452,7 +458,7 @@ function createPrompt() {
     input.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
             const command = input.value.trim();
-            input.disabled = true;
+            input.disabled = true; // Lock input immediately to prevent spamming
             if (command) {
                 commandHistory.unshift(command);
                 historyIndex = -1;
@@ -506,7 +512,8 @@ function processCommand(cmd) {
     createPrompt();
 }
 
-/*-------------> FORMATTER <--------------*/
+/*-------------> CODE FORMATOR <--------------*/
+
 const getParserByExt = ext => {
     switch (ext) {
         case "js":
@@ -526,14 +533,67 @@ const getParserByExt = ext => {
             return null;
     }
 };
-
 const formatEditorCode = async filename => {
     if (!myEditor || !filename) return;
     const code = myEditor.getValue();
     const ext = filename.split(".").pop().toLowerCase();
     const parser = getParserByExt(ext);
-    if (!parser) return;
+    if (!parser) {
+        console.log("⚠️ No Formator For : ", ext);
+        return;
+    }
     try {
+        const formatted = await prettier.format(code, {
+            parser: parser,
+            plugins: prettierPlugins,
+
+            // =========================
+            // INDENTATION
+            // =========================
+            tabWidth: 4,
+            useTabs: false,
+
+            // =========================
+            // SYNTAX STYLE
+            // =========================
+            semi: true,
+            singleQuote: false,
+            jsxSingleQuote: false,
+
+            // =========================
+            // TRAILING STYLE (VERY IMPORTANT for git diff clean code)
+            // =========================
+            trailingComma: "all",
+
+            // =========================
+            // OBJECT / ARRAY STYLE
+            // =========================
+            bracketSpacing: true,
+
+            // =========================
+            // STRING / LINE WRAPPING
+            // =========================
+            printWidth: 100,
+
+            // =========================
+            // HTML / JSX BEHAVIOR
+            // =========================
+            htmlWhitespaceSensitivity: "css",
+            jsxBracketSameLine: false,
+
+            // =========================
+            // FILE CONTROL
+            // =========================
+            requirePragma: false,
+            insertPragma: false,
+
+            // =========================
+            // ADVANCED CONSISTENCY
+            // =========================
+            arrowParens: "always", // always (x) => {} instead of x => {}
+            endOfLine: "lf" // consistent cross-platform
+        });
+        /*
         const formatted = await prettier.format(code, {
             parser: parser,
             plugins: prettierPlugins,
@@ -541,19 +601,16 @@ const formatEditorCode = async filename => {
             useTabs: false,
             semi: true,
             singleQuote: false,
-            jsxSingleQuote: false,
-            trailingComma: "all",
-            bracketSpacing: true,
-            printWidth: 100,
-            arrowParens: "always",
-            endOfLine: "lf"
+            doubleQuote : true
         });
+        */
+        // preserve cursor
         const cursor = myEditor.getCursorPosition();
         myEditor.setValue(formatted, -1);
         myEditor.moveCursorToPosition(cursor);
-        console.log("✅ Code Formated Successfully");
+        console.log("✅ Code Formated !");
     } catch (err) {
-        console.error("⚠️ Formatting Error : ", err);
+        console.error("Formatting error : ", err);
     }
 };
 
@@ -561,7 +618,6 @@ const formatEditorCode = async filename => {
 moreBtn.onclick = () => {
     moreMenu.style.display = "block";
 };
-
 document.addEventListener("click", e => {
     const target = e.target.closest(".more-menu");
     const menuItem = e.target.closest("#more-menu li");
@@ -569,40 +625,42 @@ document.addEventListener("click", e => {
     if (moreBtn && !moreBtn.contains(target)) {
         moreMenu.style.display = "none";
     }
-
+    // Here i will add action menu
     if (!menuItem) return;
 
-    const actionType = menuItem.id;
-    switch (actionType) {
-        case "save-file":
-            if (currentFile && currentFile.path !== null) {
-                formatEditorCode(currentFile.name);
-                currentFile.content = myEditor.getValue();
-                saveFile(currentFile);
-            }
-            break;
-        case "run-code":
-            if(!currentFile) return 
-            console.log("Running Code - ", currentFile);
-            break
-    }
+    menuItem.onclick = e => {
+        const targetList = e.target.closest("li");
+        if (!targetList) {
+            moreMenu.style.display = "block";
+            return;
+        }
+        const actionType = targetList.id;
+
+        switch (actionType) {
+            case "save-file":
+                if (!currentFile) return;
+                formatEditorCode(currentFile?.name);
+                break;
+            case "select-text":
+                // code
+                break;
+
+            default:
+            // code
+        }
+    };
 });
 
 window.onload = () => {
     socket.on("file-data", fileData => {
-        if (currentFile) {
-            currentFile.content = fileData;
-            myEditor.setValue(fileData, -1);
-            formatEditorCode(currentFile.name);
-        }
+        currentFile.content = fileData;
+        myEditor.setValue(fileData, -1);
     });
-
     getFiles(document.getElementById("fileTree"));
-
-    if (activeFiles.length === 0) {
+    if (activeFiles.length == 0) {
+        activeFiles.push({ name: "untitled.txt", path: null });
+        setTab({ name: "untitled.txt", path: null });
         currentFile = { name: "untitled.txt", path: null, content: "" };
-        activeFiles.push(currentFile);
-        setTab(currentFile);
         formatEditorCode(currentFile.name);
     }
     createPrompt();
