@@ -1,98 +1,176 @@
-const terminalX = document.querySelector(".terminal");
-const terminal = document.getElementById("terminal");
-let commandHistory = [];
-let historyIndex = -1;
+/**
+ * terminal.js - Terminal Emulator
+ * In-browser terminal with command history and execution
+ */
 
-
-function createPrompt() {
-    const promptLine = document.createElement("div");
-    promptLine.className = "prompt-line";
-
-    promptLine.innerHTML = `
-        <span class="prompt">
-          <span class="prompt-host">localhost</span>:<span class="prompt-user">ghs</span>--<span class="prompt-symbol">#</span>
-        </span>
-        <input type="text" autofocus spellcheck="false" autocomplete="off">
-    `;
-
-    const input = promptLine.querySelector("input");
-
-    input.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-            const command = input.value.trim();
-            input.disabled = true; // Lock input immediately to prevent spamming
-
-            if (command) {
-                commandHistory.unshift(command);
-                historyIndex = -1;
-                processCommand(command);
-            } else {
-                // If empty command, just generate a new prompt
-                createPrompt();
-            }
-        } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            if (commandHistory.length > 0) {
-                historyIndex = Math.min(
-                    historyIndex + 1,
-                    commandHistory.length - 1
-                );
-                input.value = commandHistory[historyIndex];
-            }
-        } else if (e.key === "ArrowDown") {
-            e.preventDefault();
-            if (historyIndex > 0) {
-                historyIndex--;
-                input.value = commandHistory[historyIndex];
-            } else {
-                historyIndex = -1;
-                input.value = "";
-            }
+class TerminalEmulator {
+    constructor() {
+        this.terminalElement = document.querySelector('.terminal');
+        this.terminalBody = document.getElementById('terminal');
+        this.commandHistory = [];
+        this.historyIndex = -1;
+        
+        if (this.terminalBody && window.socketClient) {
+            this.init();
         }
-    });
-
-    terminal.appendChild(promptLine);
-    input.focus();
-    terminal.scrollTop = terminal.scrollHeight;
-}
-
-function processCommand(cmd) {
-    const lowerCmd = cmd.toLowerCase().trim();
-
-    // It's usually best to handle terminal-clearing purely on the client side
-    if (lowerCmd === "clear" || lowerCmd === "cls") {
-        terminal.innerHTML = `<div class="welcome">Terminal cleared.<br></div>`;
-        createPrompt();
-        return;
     }
 
-    // Show a temporary loading indicator (optional but good for UX)
-    const loadingDiv = document.createElement("div");
-    loadingDiv.className = "output";
-    loadingDiv.style.color = "#8be9fd";
-    loadingDiv.textContent = "Executing...";
-    terminal.appendChild(loadingDiv);
-    terminal.scrollTop = terminal.scrollHeight;
+    init() {
+        this.setupSocketListeners();
+        this.createPrompt();
+        console.log('[+] Terminal emulator initialized');
+    }
 
-    // Send the command to the backend using a Socket.io callback (acknowledgement)
-    socket.emit("execute-command", cmd, serverResponse => {
-        // Remove the loading indicator once the response arrives
-        terminal.removeChild(loadingDiv);
+    setupSocketListeners() {
+        if (window.socketClient) {
+            window.socketClient.onTerminalOutput((data) => {
+                this.displayOutput(data);
+            });
+        }
+    }
 
-        const output = document.createElement("div");
-        output.className = "output";
+    createPrompt() {
+        const promptLine = document.createElement('div');
+        promptLine.className = 'prompt-line';
 
-        // Render the backend response. (Ensure backend sanitizes output to prevent XSS)
-        output.innerHTML = serverResponse;
+        const hostname = window.location.hostname || 'localhost';
+        const username = 'user';
 
-        if (output.innerHTML !== "") {
-            terminal.appendChild(output);
+        promptLine.innerHTML = `
+            <span class="prompt">
+                <span class="prompt-host">${hostname}</span>:
+                <span class="prompt-user">${username}</span>
+                <span class="prompt-symbol">#</span>
+            </span>
+            <input type="text" autofocus spellcheck="false" autocomplete="off" class="terminal-input">
+        `;
+
+        const input = promptLine.querySelector('.terminal-input');
+        this.setupInputHandlers(input, promptLine);
+
+        this.terminalBody.appendChild(promptLine);
+        input.focus();
+        this.terminalBody.scrollTop = this.terminalBody.scrollHeight;
+    }
+
+    setupInputHandlers(input, promptLine) {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                this.handleCommand(input, promptLine);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                this.showPreviousCommand(input);
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                this.showNextCommand(input);
+            }
+        });
+    }
+
+    handleCommand(input, promptLine) {
+        const command = input.value.trim();
+        input.disabled = true;
+
+        if (!command) {
+            this.createPrompt();
+            return;
         }
 
-        // Generate the new prompt AFTER the server response has been printed
-        createPrompt();
-    });
+        // Add to history
+        this.commandHistory.unshift(command);
+        this.historyIndex = -1;
+
+        // Handle local commands
+        if (this.handleLocalCommand(command)) {
+            this.createPrompt();
+            return;
+        }
+
+        // Send to server
+        this.executeRemoteCommand(command);
+    }
+
+    handleLocalCommand(command) {
+        const lowerCmd = command.toLowerCase().trim();
+
+        if (lowerCmd === 'clear' || lowerCmd === 'cls') {
+            this.terminalBody.innerHTML = '<div class="welcome">Terminal cleared</div>';
+            return true;
+        }
+
+        if (lowerCmd === 'help') {
+            this.displayOutput('Available commands: clear, help, exit\n');
+            return true;
+        }
+
+        if (lowerCmd === 'exit') {
+            this.displayOutput('Use the close button to exit terminal\n');
+            return true;
+        }
+
+        return false;
+    }
+
+    executeRemoteCommand(command) {
+        if (!window.socketClient) {
+            this.displayOutput('Error: Socket not connected\n');
+            this.createPrompt();
+            return;
+        }
+
+        // Show executing status
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'output';
+        statusDiv.style.color = '#8be9fd';
+        statusDiv.textContent = 'Executing...';
+        this.terminalBody.appendChild(statusDiv);
+
+        // Execute command
+        window.socketClient.executeCommand(command, () => {
+            statusDiv.remove();
+            this.createPrompt();
+        });
+    }
+
+    displayOutput(output) {
+        if (!output) return;
+
+        const outputDiv = document.createElement('div');
+        outputDiv.className = 'output';
+        
+        // Sanitize output to prevent XSS
+        outputDiv.textContent = output;
+        
+        this.terminalBody.appendChild(outputDiv);
+        this.terminalBody.scrollTop = this.terminalBody.scrollHeight;
+    }
+
+    showPreviousCommand(input) {
+        if (this.commandHistory.length === 0) return;
+        
+        this.historyIndex = Math.min(
+            this.historyIndex + 1,
+            this.commandHistory.length - 1
+        );
+        input.value = this.commandHistory[this.historyIndex];
+    }
+
+    showNextCommand(input) {
+        if (this.historyIndex > 0) {
+            this.historyIndex--;
+            input.value = this.commandHistory[this.historyIndex];
+        } else {
+            this.historyIndex = -1;
+            input.value = '';
+        }
+    }
 }
 
-// Initialize
-createPrompt();
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.terminalEmulator = new TerminalEmulator();
+    });
+} else {
+    window.terminalEmulator = new TerminalEmulator();
+}

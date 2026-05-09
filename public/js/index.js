@@ -1,111 +1,136 @@
-// Initialize the editor
-const editor = ace.edit("editor");
+/**
+ * index.js - Ace Editor Configuration
+ * Main editor initialization with optimized settings for production
+ */
 
-// IMPORTANT: Set base path for offline loading of modes/themes/workers
-ace.config.set("basePath", "ace/");
+class EditorManager {
+    constructor() {
+        this.editor = null;
+        this.init();
+    }
 
-// Enable the Language Tools Extension
-ace.require("ace/ext/language_tools");
+    init() {
+        try {
+            // Initialize the editor
+            this.editor = ace.edit('editor');
+            
+            // Set base path for offline loading
+            ace.config.set('basePath', 'ace/');
+            
+            // Enable Language Tools Extension
+            ace.require('ace/ext/language_tools');
+            
+            // Configure editor options
+            this.configureEditor();
+            
+            // Setup event listeners
+            this.setupListeners();
+            
+            console.log('[+] Editor initialized successfully');
+        } catch (error) {
+            console.error('[!] Failed to initialize editor:', error.message);
+        }
+    }
 
-/*
-editor.setOptions({
-    // Visuals
-    theme: "ace/theme/tomorrow_night_eighties",
-    mode: "ace/mode/javascript",
-    fontSize: "16px",
-    showPrintMargin: false,
-    showGutter: true,
+    configureEditor() {
+        const config = {
+            // =========================
+            // THEME + MODE (CORE)
+            // =========================
+            theme: 'ace/theme/tomorrow_night_eighties',
+            mode: 'ace/mode/javascript',
 
-    // ADVANCED FEATURES
-    enableBasicAutocompletion: true, // Ctrl+Space
-    enableLiveAutocompletion: true, // Shows as you type
-    enableSnippets: true, // Code snippets (e.g., 'for' loop)
+            // =========================
+            // VISUAL EXPERIENCE
+            // =========================
+            fontSize: 15,
+            lineHeight: 1.5,
+            showPrintMargin: false,
+            showGutter: true,
+            highlightActiveLine: true,
+            highlightSelectedWord: true,
+            wrap: false,
+            scrollPastEnd: 0.5,
 
-    // UX Improvements
-    selectionStyle: "text",
-    highlightActiveLine: true,
-    cursorStyle: "smooth", // Makes the cursor feel modern
-    behavioursEnabled: true, // Auto-close brackets/quotes
-    displayIndentGuides: true,
-    useSoftTabs: true,
-    tabSize: 4
-});
-*/
-// editor.setTheme("ace/theme/one_dark");
-editor.setOptions({
-    // =========================
-    // THEME + MODE (CORE)
-    // =========================
-    // theme: "ace/theme/tomorrow_night_eighties",
-    theme: "ace/theme/tomorrow_night_eighties",
-    mode: "ace/mode/javascript",
+            // Cursor / feel
+            cursorStyle: 'smooth',
+            cursorBlinking: true,
 
-    // =========================
-    // VISUAL EXPERIENCE
-    // =========================
-    fontSize: "17px",
-    lineHeight: 30,
-    showPrintMargin: false,
-    showGutter: true,
-    highlightActiveLine: true,
-    highlightSelectedWord: true,
-    wrap: false,
-    scrollPastEnd: 0.5,
+            // =========================
+            // INDENTATION / FORMAT FEEL
+            // =========================
+            tabSize: 4,
+            useSoftTabs: true,
+            behavioursEnabled: true,
+            autoScrollEditorIntoView: true,
+            displayIndentGuides: true,
 
-    // Cursor / feel
-    cursorStyle: "smooth",
-    cursorBlinking: true,
+            // =========================
+            // AUTOCOMPLETE SYSTEM
+            // =========================
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true,
+            liveAutocompletionDelay: 200,
+            liveAutocompletionThreshold: 1,
 
-    // =========================
-    // INDENTATION / FORMAT FEEL
-    // =========================
-    tabSize: 4,
-    useSoftTabs: true,
-    behavioursEnabled: true, // auto brackets, quotes, etc
-    autoScrollEditorIntoView: true,
-    displayIndentGuides: true,
+            // =========================
+            // ADVANCED EDITING FEATURES
+            // =========================
+            selectionStyle: 'text',
+            useTextareaForIME: true,
+            copyWithEmptySelection: true,
 
-    // =========================
-    // AUTOCOMPLETE SYSTEM
-    // =========================
-    enableBasicAutocompletion: true,
-    enableLiveAutocompletion: true,
-    enableSnippets: true,
+            // =========================
+            // PERFORMANCE
+            // =========================
+            minLines: 1,
+            maxLines: Infinity,
 
-    // more aggressive autocomplete behavior
-    liveAutocompletionDelay: 200,
-    liveAutocompletionThreshold: 1,
+            // =========================
+            // FIND / REPLACE
+            // =========================
+            animatedScroll: true,
+            scrollSpeed: 0.05
+        };
+        
+        this.editor.setOptions(config);
+    }
 
-    // =========================
-    // ADVANCED EDITING FEATURES
-    // =========================
-    selectionStyle: "text",
-    useTextareaForIME: true,
-    copyWithEmptySelection: true,
+    setupListeners() {
+        // Update cursor position in status bar
+        if (this.editor && this.editor.selection) {
+            this.editor.selection.on('changeCursor', () => {
+                this.updateCursorPosition();
+            });
+        }
+    }
 
-    // =========================
-    // PERFORMANCE (important for big files)
-    // =========================
-    //maxLines: Infinity,
-    minLines: 1,
+    updateCursorPosition() {
+        try {
+            const pos = this.editor.getCursorPosition();
+            const line = pos.row + 1;
+            const col = pos.column + 1;
+            const statusEl = document.getElementById('cursor-pos');
+            
+            if (statusEl) {
+                statusEl.textContent = `Ln ${line}, Col ${col}`;
+            }
+        } catch (error) {
+            console.warn('Could not update cursor position:', error.message);
+        }
+    }
 
-    // =========================
-    // FIND / REPLACE POWER
-    // =========================
-    animatedScroll: true,
-    scrollSpeed: 0.05,
+    getEditor() {
+        return this.editor;
+    }
+}
 
-    // =========================
-    // KEYBOARD EXPERIENCE
-    // =========================
-    useSoftTabs: true
-});
-// Update Cursor Position in Status Bar (if you uncommented it)
-editor.selection.on("changeCursor", function () {
-    const pos = editor.getCursorPosition();
-    const line = pos.row + 1;
-    const col = pos.column + 1;
-    const status = document.getElementById("cursor-pos");
-    if (status) status.innerText = `Ln ${line}, Col ${col}`;
-});
-
+// Initialize on document ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.editorManager = new EditorManager();
+    });
+} else {
+    window.editorManager = new EditorManager();
+}
