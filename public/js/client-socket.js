@@ -58,3 +58,8 @@ export const saveFile = async (currentFile) => {
     socket.emit("save-file", currentFile);
     return true;
 };
+export const runCode = async (data) => {
+    if (!data) return;
+    socket.emit("run-code", data);
+    return true;
+};

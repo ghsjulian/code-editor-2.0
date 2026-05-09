@@ -11,7 +11,8 @@ import {
     openFile,
     renameFile,
     renameFolder,
-    saveFile
+    saveFile,
+    runCode
 } from "./client-socket.js";
 import { getAceMode } from "./get-ace-mode.js";
 
@@ -24,6 +25,9 @@ const pasteElem = document.querySelector("#paste");
 const tabContainer = document.querySelector(".container");
 const moreMenu = document.querySelector("#more-menu");
 const moreBtn = document.querySelector(".more-menu");
+const outputScreen = document.querySelector("#ghs-code-output");
+const outputResult = document.querySelector("#output-result");
+const closeOutput = document.querySelector("#close-output");
 const myEditor = ace.edit("editor");
 
 const renderFiles = async (treeContainer, path) => {
@@ -68,6 +72,7 @@ const getFiles = async treeContainer => {
         [response].forEach(node => {
             createTreeNode(node, treeContainer);
         });
+        document.querySelector(".splash-screen").style.display = "none";
     } catch (error) {
         console.log("Error fetching files - ", error.message);
     }
@@ -582,11 +587,37 @@ document.addEventListener("click", e => {
             }
             break;
         case "run-code":
-            if(!currentFile) return 
-            console.log("Running Code - ", currentFile);
-            break
+            if (!currentFile) return;
+            processCode();
+            break;
     }
 });
+
+const processCode = () => {
+    const fileType = currentFile.name.split(".").pop().toLowerCase();
+    if (fileType === "html") {
+        formatEditorCode(currentFile.name);
+        currentFile.content = myEditor.getValue();
+        outputScreen.style.display = "block";
+        //  outputResult.srcdoc = myEditor.getValue()
+        const doc = outputResult.contentWindow.document;
+
+        doc.open();
+        doc.write(myEditor.getValue());
+        doc.close();
+
+        /*runCode({
+            file: currentFile,
+            content: myEditor.getValue()
+        });
+        */
+    }
+};
+
+closeOutput.onclick=()=>{
+    outputScreen.style.display = "none";
+}
+
 
 window.onload = () => {
     socket.on("file-data", fileData => {

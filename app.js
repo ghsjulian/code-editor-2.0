@@ -10,11 +10,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const httpServer = createServer(app);
 const io = require("socket.io")(httpServer);
-const targetPath = process.argv[2] || "../projects";
+const targetPath = process.argv[2] || "./projects";
 
 app.use(
     cors({
-        origin: ["http://localhost:8158","http://localhost:3000"],
+        origin: ["http://localhost:8158", "http://localhost:3000"],
         methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
         maxAge: 86400
@@ -30,7 +30,7 @@ app.get("/files", async (req, res) => {
     try {
         const resolvedPath = path.resolve(targetPath);
         const fileStructure = await readDir(resolvedPath);
-fileStructure.open = true
+        fileStructure.open = true;
         return res.status(200).json(fileStructure);
     } catch (error) {
         console.log("\n[!] Error in reading directory - ", error.message);
@@ -43,8 +43,17 @@ fileStructure.open = true
     }
 });
 
+// Route For Code Output
+app.get("/run-code", async (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "output.html"));
+});
+
 createSocket(httpServer);
 httpServer.listen(PORT, () => {
     console.clear();
-    console.log(`\n\n[+] Server running on http://localhost:${PORT}\n\n`);
+    console.log("\n+--------------------------------------+");
+    console.log(`\n[+] Code Server Started`);
+    console.log(`\n[+] Open http://localhost:${PORT}`);
+    console.log("\n[+] Developed By : Ghs Julian");
+    console.log("\n+--------------------------------------+\n\n");
 });

@@ -31,18 +31,19 @@ const createSocket = httpServer => {
         shell.stderr.on("data", data => {
             socket.emit("terminal:output", data.toString());
         });
+        // Run Code -----
+        socket.on("run-code", async data => {
+            socket.emit("run-output", data);
+        });
 
         // Save File ---
         socket.on("save-file", async file => {
             try {
                 const { path: path, content } = file;
-                // Check file exists
-                console.log(file)
                 if (!(await fs.existsSync(path))) {
                     console.log("File does not exist");
                     return;
                 }
-                // Replace old content with new content
                 await fs.writeFileSync(path, content, "utf8");
                 console.log("\n[+] File saved successfully\n");
             } catch (error) {

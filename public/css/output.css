@@ -1,0 +1,52 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+#ghs-code-output {
+    top: 0;
+    left: 0;
+    position: absolute;
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 5px;
+    z-index: 15000;
+    background: #000;
+}
+
+#ghs-code-output .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 50px;
+    padding: 0.5rem 0.7rem;
+    z-index: 1400;
+}
+#ghs-code-output .header h3 {
+    color: #fff;
+}
+#ghs-code-output .header button {
+    color: #f00;
+    font-size: 23px;
+    font-weight: 600;
+    outline: none;
+    border: none;
+    background: transparent;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+#ghs-code-output iframe {
+    margin-top: 50px;
+    width: 100vw;
+    height: calc(100vh - 50px);
+    overflow: auto;
+    scroll-behavior: smooth;
+    border-radius: 5px;
+    background:#fff;
+}

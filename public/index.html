@@ -15,10 +15,29 @@
         <link rel="stylesheet" href="css/index.css" />
         <link rel="stylesheet" href="css/terminal.css" />
         <link rel="stylesheet" href="css/settings.css" />
+        <link rel="stylesheet" href="css/output.css" />
     </head>
     <body>
-        <!-- Activity Bar -->
+        <!-- Output Screen -->
+        <div id="ghs-code-output">
+            <div class="header">
+                <h3>Output Result</h3>
+                <button id="close-output">X</button>
+            </div>
+            <iframe  id="output-result">
+                
+            </iframe>
+        </div>
 
+        <!-- Splash Screen -->
+        <div class="splash-screen">
+            <div class="loader">
+                <img src="icons/dev.png" alt="Splash Image" />
+                <!-- <h3>CODE EDITOR</h3> -->
+                <span>Version : 5.26</span>
+                <small>Created By : Ghs Julian </small>
+            </div>
+        </div>
         <!-- Primary Sidebar (Project Tree) -->
         <div class="primary-sidebar" id="explorer-sidebar">
             <div class="activity-bars">

@@ -1,11 +1,11 @@
 {
-  "name": "code",
+  "name": "code editor",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "dev": "nodemon app.js",
-    "start": "node app.js"
+    "dev": "nodemon app.js ./projects",
+    "start": "node app.js ./projects"
   },
   "keywords": [],
   "author": "",
